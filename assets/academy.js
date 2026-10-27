@@ -1,14 +1,16 @@
 
 import { catalog } from "./catalog.js";
 import {scenarioBank,competencyLabels,competencyWeights,summarize} from "./scenario-bank.js";
-import { courses, simulations, langText, validateScenario } from "./data.js";
+import {langText} from "./data.js";
+import {communicationTracks as courses} from "./communication.js";
 
 const $ = s => document.querySelector(s);
 const esc = v => String(v ?? "").replace(/[&<>"']/g, ch => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[ch]));
 const state = {
   lang: localStorage.getItem("academy-language")==="en"?"en":"ar",
   query: "", series: "ALL", menu: false, sim: null,
-  selectedLesson: 0, caseGroup:"all",
+  selectedLesson: 0, lessonChoice:null, caseGroup:"all",
+  lessonScores:JSON.parse(localStorage.getItem("academy-communication-scores")||"{}"),
   completed: JSON.parse(localStorage.getItem("academy-lessons")||"[]")
 };
 const T = v => langText(v,state.lang);
@@ -23,8 +25,8 @@ const words = {
     all:"الكل", choose:"اختر جهازًا لعرض كامل التفاصيل", specs:"المواصفات التفصيلية", play:"تدرّب على الجهاز",
     overview:"نظرة سريعة", fabe:"طريقة FABE", demos:"تجربة العميل في المتجر", objections:"اعتراضات وأسئلة متوقعة",
     feature:"F — Feature", advantage:"A — Advantage", benefit:"B — Benefit", evidence:"E — Evidence",
-    back:"العودة للأجهزة", view:"فتح المرجع", coursesTitle:"مسارات تطوير مهارات البيع",
-    coursesDesc:"دروس قصيرة قابلة للتطبيق في صالة العرض، من فهم العميل إلى تجربة ما بعد البيع.",
+    back:"العودة للأجهزة", view:"فتح المرجع", coursesTitle:"مهارات التواصل مع العملاء",
+    coursesDesc:"تطوير مهارة التواصل من أول ترحيب، مرورًا بالاستماع وطرح الأسئلة وشرح القيمة، حتى إدارة الاعتراض وإنهاء الحوار باحتراف.",
     lessons:"الدروس", next:"الدرس التالي", prev:"السابق", done:"سجل إكمال الدرس", completed:"تم الإنجاز",
     simTitle:"حاكي موقفًا حقيقيًا مع العميل", simDesc:"اختياراتك تغيّر مسار المحادثة، وتحصل على درجة وتغذية راجعة.",
     start:"ابدأ السيناريو", client:"العميل", decision:"كيف ترد على العميل؟", continue:"متابعة المحادثة",
@@ -50,8 +52,8 @@ const words = {
     all:"All", choose:"Select a device to view full details", specs:"Detailed specifications", play:"Practice this product",
     overview:"Overview", fabe:"FABE Method", demos:"Live in-store demonstrations", objections:"Customer questions & objections",
     feature:"F — Feature", advantage:"A — Advantage", benefit:"B — Benefit", evidence:"E — Evidence",
-    back:"Back to devices", view:"Open reference", coursesTitle:"Sales skill development",
-    coursesDesc:"Practical lessons you can apply on the retail floor, from discovery to after-sales.",
+    back:"Back to devices", view:"Open reference", coursesTitle:"Customer communication skills",
+    coursesDesc:"Build stronger customer conversations: welcome, listen, ask, explain, respond to objections and close professionally.",
     lessons:"Lessons", next:"Next lesson", prev:"Previous", done:"Mark lesson complete", completed:"Completed",
     simTitle:"Practice a real customer conversation", simDesc:"Your choices shape the journey, with a score and instant coaching.",
     start:"Start scenario", client:"Customer", decision:"What would you say next?", continue:"Continue",
@@ -151,24 +153,54 @@ function devicePage(id){
  '<div class="aside-card dark-aside"><div class="eyebrow">PRACTICE WITH A CUSTOMER</div><h3>'+esc(L("play"))+'</h3><p>'+esc(L("simDesc"))+'</p><a href="'+href(caseFor?"case/"+caseFor.id:"simulator")+'" class="btn accent">'+esc(L("simCta"))+' ↗</a></div></aside></div>'+
  (group?'<div class="model-scenarios"><div class="section-heading"><div><span class="eyebrow dark">SALES ASSESSMENT</span><h2>'+esc(state.lang==="ar"?"10 سيناريوهات بيع لهذا الموديل":"10 sales scenarios for this model")+'</h2></div></div><div class="model-case-grid">'+(group?scenarioBank.filter(c=>c.group===group).map(c=>'<a class="model-case-link" href="'+href("case/"+c.id)+'"><span>'+String(c.number).padStart(2,"0")+'</span><strong>'+esc(T(c.title))+'</strong><span>↗</span></a>').join(""):'')+'</div></div></main>': '</div></main>');
 }
+
+function courseProgress(course){
+ return course.lessons.filter(x=>Number(state.lessonScores[x.id]||0)>=70).length;
+}
 function trainingPage(){
- return '<main id="content"><div class="wrap standard-page"><div class="simple-heading"><span class="eyebrow dark">LEARNING TRACKS</span><h1>'+esc(L("coursesTitle"))+'</h1><p>'+esc(L("coursesDesc"))+'</p></div>'+
- '<div class="training-grid">'+courses.map((c,i)=>'<a href="'+href("lesson/"+c.id)+'" class="course-card"><div class="course-no">'+c.index+'</div><div class="course-symbol">'+c.icon+'</div><div class="eyebrow dark">'+esc(T(c.tag))+'</div><h2>'+esc(T(c.title))+'</h2><p>'+esc(T(c.description))+'</p><div class="course-foot"><span>'+c.lessons.length+' '+esc(L("lessons"))+'</span><span>↗</span></div></a>').join("")+'</div>'+
- '</div></main>';
+ const total=courses.reduce((sum,c)=>sum+c.lessons.length,0);
+ const complete=courses.reduce((sum,c)=>sum+courseProgress(c),0);
+ const percent=Math.round(complete/Math.max(1,total)*100);
+ const intro=state.lang==="ar"?
+ "تعلّم كيف يسمعك العميل، وكيف تسمعه أنت، وكيف تحول الحديث إلى تجربة تحترم احتياجه.":
+ "Learn how to listen, be understood, and turn conversations into customer-first experiences.";
+ return '<main id="content"><div class="wrap communication-page">'+
+ '<section class="communication-hero"><div class="communication-hero-copy"><span class="eyebrow">COMMUNICATION EXCELLENCE</span><h1>'+esc(L("coursesTitle"))+'</h1><p>'+esc(intro)+'</p>'+
+ '<div class="communication-summary"><div><strong>'+courses.length.toString().padStart(2,"0")+'</strong><span>'+esc(state.lang==="ar"?"مسارات تخصصية":"Focused paths")+'</span></div><div><strong>'+total+'</strong><span>'+esc(state.lang==="ar"?"درسًا تطبيقيًا":"Practice lessons")+'</span></div><div><strong>'+complete+'/'+total+'</strong><span>'+esc(state.lang==="ar"?"دروس منجزة":"Completed lessons")+'</span></div></div></div>'+
+ '<div class="communication-hero-art" aria-hidden="true"><div class="bubble bubble-one">“'+esc(state.lang==="ar"?"أسمعك":"I hear you")+'”</div><div class="bubble bubble-two">“'+esc(state.lang==="ar"?"فهمتك":"I understand")+'”</div><div class="communication-orb">◎</div><div class="communication-hero-caption">LISTEN → CONNECT → GUIDE</div></div></section>'+
+ '<section class="training-lead"><div><span class="eyebrow dark">LEARNING JOURNEY</span><h2>'+esc(state.lang==="ar"?"تعلّم بالتطبيق، وليس بحفظ العبارات":"Practice the conversation, not memorized scripts")+'</h2><p>'+esc(L("coursesDesc"))+'</p></div><div class="training-progress-box"><div><strong>'+percent+'%</strong><span>'+esc(state.lang==="ar"?"نسبة إنجازك":"Your progress")+'</span></div><div class="training-progress"><span style="width:'+percent+'%"></span></div></div></section>'+
+ '<div class="training-grid communication-grid">'+courses.map((course,index)=>{
+  const done=courseProgress(course),ratio=Math.round(done/course.lessons.length*100);
+  const skillTags=course.skills.map(s=>'<span>'+esc(T(s))+'</span>').join("");
+  return '<a href="'+href("lesson/"+course.id)+'" class="course-card communication-card" style="--path-color:'+course.color+'"><div class="course-head"><span class="course-no">'+course.index+'</span><span class="course-symbol">'+course.icon+'</span></div>'+
+  '<span class="course-overline">'+esc(state.lang==="ar"?"المسار "+(index+1):"PATH "+(index+1))+'</span><h2>'+esc(T(course.title))+'</h2><p>'+esc(T(course.description))+'</p>'+
+  '<div class="skill-tags">'+skillTags+'</div><div class="communication-outcome">'+esc(T(course.outcome))+'</div><div class="course-progress-row"><span>'+done+' / '+course.lessons.length+' '+esc(state.lang==="ar"?"دروس مكتملة":"lessons completed")+'</span><strong>'+ratio+'%</strong></div><div class="course-progress-track"><i style="width:'+ratio+'%"></i></div>'+
+  '<div class="course-foot"><span>'+esc(state.lang==="ar"?"افتح المسار":"Open learning path")+'</span><span>↗</span></div></a>';
+ }).join("")+'</div></div></main>';
 }
 function lessonPage(id){
  const course=courses.find(c=>c.id===id);if(!course)return trainingPage();
  state.selectedLesson=Math.max(0,Math.min(state.selectedLesson,course.lessons.length-1));
- const lesson=course.lessons[state.selectedLesson], key=course.id+":"+state.selectedLesson;
- const done=state.completed.includes(key);
- return '<main id="content"><div class="wrap standard-page"><a href="#/training" class="back-link">← '+esc(L("courses"))+'</a>'+
- '<div class="simple-heading"><span class="eyebrow dark">'+esc(T(course.tag))+'</span><h1>'+esc(T(course.title))+'</h1><p>'+esc(T(course.description))+'</p></div>'+
- '<div class="lesson-grid"><aside class="lesson-sidebar"><strong>'+esc(L("lessons"))+'</strong>'+course.lessons.map((l,i)=>'<button class="lesson-btn '+(state.selectedLesson===i?"active":"")+'" data-lesson="'+i+'"><span>'+(i+1).toString().padStart(2,"0")+'</span><span>'+esc(T(l.title))+'</span>'+(state.completed.includes(course.id+":"+i)?" ✓":"")+'</button>').join("")+'</aside>'+
- '<section class="lesson-content"><span class="eyebrow dark">LESSON '+(state.selectedLesson+1).toString().padStart(2,"0")+'</span><h2>'+esc(T(lesson.title))+'</h2><p>'+esc(T(lesson.body))+'</p>'+
- '<div class="lesson-actions"><button class="btn done-btn" data-action="complete" '+(done?"disabled":"")+'>'+esc(done?L("completed"):L("done"))+'</button>'+
- '<div class="lesson-arrows"><button data-action="prev-lesson" class="btn light-btn" '+(state.selectedLesson===0?"disabled":"")+'>'+esc(L("prev"))+'</button><button data-action="next-lesson" class="btn accent" '+(state.selectedLesson===course.lessons.length-1?"disabled":"")+'>'+esc(L("next"))+' ←</button></div></div></section></div></div></main>';
+ const item=course.lessons[state.selectedLesson], completed=courseProgress(course),progress=Math.round(completed/course.lessons.length*100);
+ const answerIndex=state.lessonChoice, selected=answerIndex===null?null:item.options[answerIndex];
+ const best=Number(state.lessonScores[item.id]||0);
+ const chapter=String(state.selectedLesson+1).padStart(2,"0");
+ const label=(ar,en)=>state.lang==="ar"?ar:en;
+ const feedback=selected?'<div class="communication-feedback '+(selected.score===100?"excellent":selected.score===50?"partial":"needs-work")+'"><div class="communication-feedback-head"><strong>'+esc(selected.score===100?label("إجابة ممتازة","Strong response"):label("فرصة للتحسين","Room for improvement"))+'</strong><span>'+selected.score+' / 100</span></div><p>'+esc(T(selected.feedback))+'</p><div class="model-response"><span>'+esc(label("صياغة مقترحة","Recommended response"))+'</span><p>'+esc(T(item.model))+'</p></div>'+
+ '<div class="communication-feedback-actions"><button class="btn light-btn" data-action="retry-lesson">'+esc(label("جرّب مرة أخرى","Try again"))+'</button>'+(state.selectedLesson<course.lessons.length-1?'<button class="btn accent" data-action="next-lesson">'+esc(L("next"))+' ←</button>':'<a class="btn accent" href="#/training">'+esc(label("العودة إلى المسارات","Back to learning paths"))+' ↗</a>')+'</div></div>':'';
+ return '<main id="content"><div class="wrap standard-page communication-lesson-page"><a href="#/training" class="back-link">← '+esc(L("courses"))+'</a>'+
+ '<div class="communication-course-heading"><div><span class="eyebrow dark">COMMUNICATION · PATH '+esc(course.index)+'</span><h1>'+esc(T(course.title))+'</h1><p>'+esc(T(course.outcome))+'</p></div><div class="course-completion"><strong>'+completed+' / '+course.lessons.length+'</strong><span>'+esc(label("درس منجز","Lessons done"))+'</span><div class="training-progress"><span style="width:'+progress+'%"></span></div></div></div>'+
+ '<div class="lesson-grid communication-lesson-grid"><aside class="lesson-sidebar communication-sidebar"><div class="sidebar-title"><span>'+esc(label("دروس هذا المسار","Lessons in this path"))+'</span><strong>'+course.lessons.length+'</strong></div>'+
+ course.lessons.map((l,i)=>'<button class="lesson-btn '+(state.selectedLesson===i?"active":"")+'" data-lesson="'+i+'"><span class="chapter-no">'+String(i+1).padStart(2,"0")+'</span><span>'+esc(T(l.title))+'</span>'+(Number(state.lessonScores[l.id]||0)>=70?'<span class="lesson-check">✓</span>':'')+'</button>').join("")+
+ '</aside><article class="lesson-content communication-content"><div class="lesson-topline"><span class="eyebrow dark">'+esc(label("الدرس","LESSON"))+' '+chapter+'</span><span class="lesson-status '+(best>=70?"passed":"")+'">'+esc(best>=70?label("مكتمل","Completed"):label("قيد التعلم","In progress"))+'</span></div>'+
+ '<h2>'+esc(T(item.title))+'</h2><section class="learning-principle"><span class="section-mini">01 · '+esc(label("الفكرة الأساسية","KEY CONCEPT"))+'</span><p>'+esc(T(item.concept))+'</p></section>'+
+ '<section class="communication-situation"><div class="situation-header"><span class="customer-avatar">◉</span><div><small>REAL CUSTOMER MOMENT</small><h3>'+esc(label("موقف من صالة العرض","Retail-floor situation"))+'</h3></div></div><p>“'+esc(T(item.situation))+'”</p></section>'+
+ '<section class="communication-quiz"><span class="section-mini">02 · '+esc(label("اختبر أسلوب تواصلك","CHOOSE YOUR RESPONSE"))+'</span><h3>'+esc(label("ما الرد الأنسب في هذا الموقف؟","Which response would you choose?"))+'</h3><div class="communication-options">'+item.options.map((o,i)=>'<button class="communication-option '+(answerIndex===i?"selected":"")+'" data-lesson-answer="'+i+'" '+(selected?"disabled":"")+'><span>'+String.fromCharCode(65+i)+'</span><strong>'+esc(T(o.text))+'</strong></button>').join("")+'</div></section>'+
+ feedback+
+ '<section class="communication-drill"><span class="section-mini">03 · '+esc(label("تطبيق في المعرض","ON-FLOOR PRACTICE"))+'</span><p>'+esc(T(item.drill))+'</p></section>'+
+ '<div class="lesson-actions communication-lesson-actions"><div class="lesson-arrows"><button class="btn light-btn" data-action="prev-lesson" '+(state.selectedLesson===0?"disabled":"")+'>'+esc(L("prev"))+'</button><button class="btn accent" data-action="next-lesson" '+(state.selectedLesson===course.lessons.length-1?"disabled":"")+'>'+esc(L("next"))+' ←</button></div></div>'+
+ '</article></div></div></main>';
 }
-
 const axes=["knowledge","experience","selling"];
 function simChoices(){
  const tabs=[["all",state.lang==="ar"?"جميع الحالات":"All cases"],["camon","CAMON 50 Ultra"],["pova8","POVA 8 Series"],["curve","POVA Curve 2"]];
@@ -223,7 +255,7 @@ document.addEventListener("click",event=>{
  const filter=event.target.closest("[data-series].filter");
  if(filter){state.series=filter.dataset.series;$("#product-grid").innerHTML=cards();document.querySelectorAll(".filter").forEach(b=>b.classList.toggle("selected",b.dataset.series===state.series));return}
  const lesson=event.target.closest("[data-lesson]");
- if(lesson){state.selectedLesson=Number(lesson.dataset.lesson);render();return}
+ if(lesson){state.selectedLesson=Number(lesson.dataset.lesson);state.lessonChoice=null;render();return}
  const action=event.target.closest("[data-action]");
  if(action){
   if(action.dataset.action==="jump"){document.getElementById(action.dataset.target)?.scrollIntoView({behavior:"smooth",block:"start"});return}
@@ -233,9 +265,10 @@ document.addEventListener("click",event=>{
    render();return
   }
   if(action.dataset.action==="prev-lesson"||action.dataset.action==="next-lesson"){
-   state.selectedLesson+=action.dataset.action==="next-lesson"?1:-1;render();return
+   state.selectedLesson+=action.dataset.action==="next-lesson"?1:-1;state.lessonChoice=null;render();return
   }
-  if(action.dataset.action==="retry"){state.sim=null;render();return}
+  if(action.dataset.action==="retry-lesson"){state.lessonChoice=null;render();return}
+    if(action.dataset.action==="retry"){state.sim=null;render();return}
   if(action.dataset.action==="continue"){
    const c=scenarioBank.find(s=>s.id===state.sim?.id);
    const option=c?.stages?.[state.sim.node]?.choices?.[state.sim.chosen];
@@ -248,6 +281,18 @@ document.addEventListener("click",event=>{
  }
  const filt=event.target.closest("[data-case-group]");
  if(filt){state.caseGroup=filt.dataset.caseGroup;render();return}
+ const chosenLesson=event.target.closest("[data-lesson-answer]");
+ if(chosenLesson){
+  const course=courses.find(c=>c.id===path().split("/")[1]);
+  const item=course?.lessons[state.selectedLesson];
+  const idx=Number(chosenLesson.dataset.lessonAnswer);
+  if(!item||!item.options[idx]||state.lessonChoice!==null)return;
+  const grade=item.options[idx].score;
+  state.lessonChoice=idx;
+  state.lessonScores[item.id]=Math.max(Number(state.lessonScores[item.id]||0),grade);
+  localStorage.setItem("academy-communication-scores",JSON.stringify(state.lessonScores));
+  render();return;
+ }
  const choice=event.target.closest("[data-choice]");
  if(choice&&state.sim&&!state.sim.feedback){
    const scenario=scenarioBank.find(s=>s.id===state.sim.id);
@@ -268,5 +313,5 @@ document.addEventListener("input",event=>{
   field.focus();
  }
 });
-window.addEventListener("hashchange",()=>{state.selectedLesson=0;state.menu=false;window.scrollTo({top:0});render()});
+window.addEventListener("hashchange",()=>{state.selectedLesson=0;state.lessonChoice=null;state.menu=false;window.scrollTo({top:0});render()});
 setLanguage();render();
