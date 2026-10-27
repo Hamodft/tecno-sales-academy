@@ -3,6 +3,7 @@ import { catalog } from "./catalog.js";
 import {scenarioBank,competencyLabels,competencyWeights,summarize} from "./scenario-bank.js";
 import {langText} from "./data.js";
 import {communicationTracks as courses} from "./communication.js";
+import {journeyCases,journeySummary,journeyMetrics,journeyWeights,journeyPhaseCount} from "./sales-journey.js";
 
 const $ = s => document.querySelector(s);
 const esc = v => String(v ?? "").replace(/[&<>"']/g, ch => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[ch]));
@@ -11,6 +12,8 @@ const state = {
   query: "", series: "ALL", menu: false, sim: null,
   selectedLesson: 0, lessonChoice:null, caseGroup:"all",
   lessonScores:JSON.parse(localStorage.getItem("academy-communication-scores")||"{}"),
+  journey:JSON.parse(localStorage.getItem("academy-journey-current")||"null"),
+  journeyRecords:JSON.parse(localStorage.getItem("academy-journey-records")||"{}"),
   completed: JSON.parse(localStorage.getItem("academy-lessons")||"[]")
 };
 const T = v => langText(v,state.lang);
@@ -82,7 +85,7 @@ function setLanguage(){
 }
 function brand(){return '<a class="brand" href="#/products" aria-label="TECNO Sales Academy"><img class="tecno-logo" src="./assets/tecno-logo.svg" alt="TECNO"/><span class="academy-word">SALES ACADEMY</span></a>';}
 function navLink(page,label){
-  const active = path()===page || (page==="products" && path().startsWith("device/")) || (page==="training" && path().startsWith("lesson/")) || (page==="simulator" && path().startsWith("case/"));
+  const active = path()===page || (page==="products" && path().startsWith("device/")) || (page==="training" && (path().startsWith("lesson/")||path().startsWith("journey/"))) || (page==="simulator" && path().startsWith("case/"));
   return '<a class="nav-link '+(active?"active":"")+'" href="'+href(page)+'">'+esc(L(label))+'</a>';
 }
 function header(){
@@ -97,6 +100,7 @@ function render(){
   if(seg[0]==="device")body=devicePage(seg[1]);
   else if(seg[0]==="training")body=trainingPage();
   else if(seg[0]==="lesson")body=lessonPage(seg[1]);
+  else if(seg[0]==="journey")body=journeyPage(seg[1]);
   else if(seg[0]==="simulator")body=simulatorPage();
   else if(seg[0]==="case")body=casePage(seg[1]);
   else body=libraryPage();
@@ -165,9 +169,7 @@ function trainingPage(){
  "تعلّم كيف يسمعك العميل، وكيف تسمعه أنت، وكيف تحول الحديث إلى تجربة تحترم احتياجه.":
  "Learn how to listen, be understood, and turn conversations into customer-first experiences.";
  return '<main id="content"><div class="wrap communication-page">'+
- '<section class="communication-hero"><div class="communication-hero-copy"><span class="eyebrow">COMMUNICATION EXCELLENCE</span><h1>'+esc(L("coursesTitle"))+'</h1><p>'+esc(intro)+'</p>'+
- '<div class="communication-summary"><div><strong>'+courses.length.toString().padStart(2,"0")+'</strong><span>'+esc(state.lang==="ar"?"مسارات تخصصية":"Focused paths")+'</span></div><div><strong>'+total+'</strong><span>'+esc(state.lang==="ar"?"درسًا تطبيقيًا":"Practice lessons")+'</span></div><div><strong>'+complete+'/'+total+'</strong><span>'+esc(state.lang==="ar"?"دروس منجزة":"Completed lessons")+'</span></div></div></div>'+
- '<div class="communication-hero-art" aria-hidden="true"><div class="bubble bubble-one">“'+esc(state.lang==="ar"?"أسمعك":"I hear you")+'”</div><div class="bubble bubble-two">“'+esc(state.lang==="ar"?"فهمتك":"I understand")+'”</div><div class="communication-orb">◎</div><div class="communication-hero-caption">LISTEN → CONNECT → GUIDE</div></div></section>'+
+ journeyEntry()+
  '<section class="training-lead"><div><span class="eyebrow dark">LEARNING JOURNEY</span><h2>'+esc(state.lang==="ar"?"تعلّم بالتطبيق، وليس بحفظ العبارات":"Practice the conversation, not memorized scripts")+'</h2><p>'+esc(L("coursesDesc"))+'</p></div><div class="training-progress-box"><div><strong>'+percent+'%</strong><span>'+esc(state.lang==="ar"?"نسبة إنجازك":"Your progress")+'</span></div><div class="training-progress"><span style="width:'+percent+'%"></span></div></div></section>'+
  '<div class="training-grid communication-grid">'+courses.map((course,index)=>{
   const done=courseProgress(course),ratio=Math.round(done/course.lessons.length*100);
