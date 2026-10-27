@@ -179,6 +179,14 @@ function build(def,group,i){
    ]
   }
  };
+ const groupIndex=groups.findIndex(groupItem=>groupItem.key===group.key);
+ const stagesToBalance=["discovery","recovery","technical","evidence","closing"];
+ stagesToBalance.forEach((stageName,stageIndex)=>{
+  const choices=stages[stageName].choices;
+  const shift=(i*7+groupIndex*11+stageIndex*5+1)%choices.length;
+  stages[stageName].choices=choices.map((_,j)=>choices[(j-shift+choices.length)%choices.length]);
+ });
+
  return {
   id:group.key+"-"+String(i+1).padStart(2,"0"),
   product:group.model,group:group.key,model:group.name,
