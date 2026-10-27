@@ -3,6 +3,7 @@ import {spawn} from "node:child_process";
 import {chromium} from "playwright";
 import {scenarioBank} from "../assets/scenario-bank.js";
 import {communicationTracks} from "../assets/communication.js";
+import {journeyCases} from "../assets/sales-journey.js";
 const bestIndex=options=>options.reduce((best,o,i)=>{
  const score=x=>Object.values(x.marks).reduce((sum,v)=>sum+v,0);
  return score(o)>score(options[best])?i:best;
@@ -37,6 +38,27 @@ try{
  assert.ok(await page.locator(".cover-photo .real-phone-photo").evaluate(el=>el.complete&&el.naturalWidth>0));
  await page.goto(origin+"#/device/pova-curve-2");
  assert.ok(await page.locator(".cover-photo .real-phone-photo").evaluate(el=>el.complete&&el.naturalWidth>0));
+ await page.goto(origin+"#/training");
+ await page.locator(".sales-journey-hero").waitFor();
+ assert.equal(await page.locator(".sj-persona").count(),3);
+ assert.equal(await page.locator(".sj-step-label").count(),9);
+ await page.goto(origin+"#/journey/camera");
+ await page.locator(".sj-answer").first().waitFor();
+ const cameraJourney=journeyCases.find(c=>c.id==="camera");
+ assert.equal(await page.locator(".sj-timeline-item").count(),9);
+ for(const step of cameraJourney.steps){
+   const good=step.options.findIndex(o=>o.quality===2);
+   await page.locator('[data-journey-choice="'+good+'"]').click();
+   await page.locator(".sj-feedback.good").waitFor();
+   await page.locator('[data-action="journey-next"]').click();
+ }
+ await page.locator(".sj-result-number").waitFor();
+ assert.match(await page.locator(".sj-result-number").innerText(),/100/);
+ assert.equal(await page.locator(".sj-result-metric").count(),4);
+ await page.locator('[data-action="journey-restart"]').click();
+ await page.locator('[data-journey-choice="'+cameraJourney.steps[0].options.findIndex(o=>o.quality===0)+'"]').click();
+ await page.locator('[data-action="journey-next"]').click();
+ assert.ok((await page.locator(".sj-confidence").innerText()).includes("39%"),"customer trust decreases after poor decision");
  await page.goto(origin+"#/training");
  assert.equal(await page.locator(".communication-card").count(),6);
  await page.goto(origin+"#/lesson/first-impression");
@@ -98,6 +120,12 @@ try{
  await page.goto(origin+"#/lesson/first-impression");
  await page.locator(".communication-option").first().waitFor();
  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),"communication lesson fits mobile");
+ await page.goto(origin+"#/journey/battery");
+ await page.locator(".sj-answer").first().waitFor();
+ assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),"customer journey fits mobile");
+ await page.goto(origin+"#/training");
+ assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),"journey landing fits mobile");
+
  assert.deepEqual(errors,[],"no browser JavaScript errors");
  console.log("PASS: logo, all three real device photos, 30 unique scenarios, 3-axis scoring, branching, Arabic/English, mobile.");
 }finally{if(browser)await browser.close();server.kill("SIGTERM")}
