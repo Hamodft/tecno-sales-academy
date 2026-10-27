@@ -168,28 +168,52 @@ function lessonPage(id){
  '<div class="lesson-actions"><button class="btn done-btn" data-action="complete" '+(done?"disabled":"")+'>'+esc(done?L("completed"):L("done"))+'</button>'+
  '<div class="lesson-arrows"><button data-action="prev-lesson" class="btn light-btn" '+(state.selectedLesson===0?"disabled":"")+'>'+esc(L("prev"))+'</button><button data-action="next-lesson" class="btn accent" '+(state.selectedLesson===course.lessons.length-1?"disabled":"")+'>'+esc(L("next"))+' ←</button></div></div></section></div></div></main>';
 }
+
+const axes=["knowledge","experience","selling"];
+function simChoices(){
+ const tabs=[["all",state.lang==="ar"?"جميع الحالات":"All cases"],["camon","CAMON 50 Ultra"],["pova8","POVA 8 Series"],["curve","POVA Curve 2"]];
+ return tabs.map(([id,label])=>'<button class="sim-filter '+(state.caseGroup===id?"selected":"")+'" data-case-group="'+id+'">'+esc(label)+' <span>'+(id==="all"?"30":"10")+'</span></button>').join("");
+}
 function simulatorPage(){
- return '<main id="content"><div class="wrap standard-page"><div class="simple-heading"><span class="eyebrow dark">CUSTOMER EXPERIENCE</span><h1>'+esc(L("simTitle"))+'</h1><p>'+esc(L("simDesc"))+'</p></div>'+
- '<div class="case-grid">'+simulations.map((s,i)=>{const product=catalog.find(p=>p.id===s.product);return '<a class="case-card" href="'+href("case/"+s.id)+'"><div class="case-index">0'+(i+1)+'</div><span class="series-chip case-chip">'+esc(product?.name??"TECNO")+'</span><h2>'+esc(T(s.name))+'</h2><p>'+esc(T(s.description))+'</p><div class="course-foot"><span>'+esc(T(s.level))+'</span><span class="circle-arrow">↗</span></div></a>'}).join("")+'</div></div></main>';
+ const shown=scenarioBank.filter(c=>state.caseGroup==="all"||c.group===state.caseGroup);
+ return '<main id="content"><div class="wrap standard-page"><div class="simple-heading"><span class="eyebrow dark">SALES ASSESSMENT · 30 SCENARIOS</span><h1>'+esc(L("simTitle"))+'</h1><p>'+esc(L("simDesc"))+'</p></div>'+
+ '<div class="case-filter">'+simChoices()+'</div><div class="case-grid scenario-grid">'+shown.map(c=>{
+  const p=catalog.find(x=>x.id===c.product),photo=productImage(p);
+  return '<a class="case-card scenario-card" href="'+href("case/"+c.id)+'"><div class="case-card-media">'+(photo?'<img loading="lazy" src="'+esc(photo)+'" alt="'+esc(p.name)+'">':'')+'</div><div class="case-card-body"><span class="case-n">'+String(c.number).padStart(2,"0")+' / 10</span><span class="case-model">'+esc(c.model)+'</span><h2>'+esc(T(c.title))+'</h2><p>'+esc(T(c.description))+'</p><div class="course-foot"><span>'+esc(T(c.level))+'</span><span>↗</span></div></div></a>';
+ }).join("")+'</div></div></main>';
+}
+function resultDetail(c,run){
+ const report=summarize(run.marks);
+ const ratings={excellent:{ar:"ممتاز",en:"Excellent"},good:{ar:"جيد",en:"Good"},develop:{ar:"يحتاج إلى تطوير",en:"Needs development"}};
+ const weak=axes.reduce((w,k)=>report.scores[k]<report.scores[w]?k:w,axes[0]);
+ const improvement={
+  knowledge:{ar:"راجع المواصفات وطرق إثباتها عمليًا للعميل.",en:"Review specifications and practical demonstrations."},
+  experience:{ar:"ركّز على فهم العميل والاستماع لاحتياجه قبل العرض.",en:"Focus on discovery and listening before recommending."},
+  selling:{ar:"راجع أساليب معالجة الاعتراض والإغلاق دون ضغط.",en:"Practice objection handling and respectful closing."}
+ };
+ const bar=key=>'<div class="score-axis"><div><span>'+esc(T(competencyLabels[key]))+'</span><strong>'+report.scores[key]+'%</strong></div><div class="score-track"><span style="width:'+report.scores[key]+'%"></span></div><small>'+Math.round(competencyWeights[key]*100)+'% '+esc(state.lang==="ar"?"من النتيجة":"of overall score")+'</small></div>';
+ return '<main id="content"><div class="wrap standard-page report-page"><a href="#/simulator" class="back-link">← '+esc(L("simulation"))+'</a>'+
+ '<div class="report-header"><span class="eyebrow">SALES PERFORMANCE REPORT</span><h1>'+esc(T(c.title))+'</h1><p>'+esc(c.model)+'</p><div class="report-bignum">'+report.total+'<small>%</small></div><div class="report-level">'+esc(T(ratings[report.level]))+'</div></div>'+
+ '<div class="report-metrics">'+axes.map(bar).join("")+'</div>'+
+ '<div class="report-advice"><div><span class="eyebrow dark">'+esc(state.lang==="ar"?"مجال التحسين":"FOCUS AREA")+'</span><h2>'+esc(T(competencyLabels[weak]))+'</h2><p>'+esc(T(improvement[weak]))+'</p></div><div class="report-actions"><button class="btn accent" data-action="retry">'+esc(L("retry"))+'</button><a class="btn light-btn" href="#/simulator">'+esc(L("again"))+'</a></div></div></div></main>';
 }
 function casePage(id){
- const s=simulations.find(c=>c.id===id);if(!s)return simulatorPage();
- if(!state.sim||state.sim.id!==id)state.sim={id,node:s.start,score:0,feedback:null,chosen:null,history:[],finished:false};
- if(state.sim.finished){
-  let rating=state.sim.score>=80?(state.lang==="ar"?"ممتاز، استمر في البيع حسب احتياج العميل.":"Excellent—keep selling to customer needs."):state.lang==="ar"?"راجع FABE وجرب مرة ثانية.":"Review FABE and try again.";
-  return '<main id="content"><div class="wrap standard-page"><a href="#/simulator" class="back-link">← '+esc(L("simulation"))+'</a><section class="result-panel"><span class="eyebrow">CUSTOMER EXPERIENCE RESULT</span><h1>'+esc(L("result"))+'</h1><div class="big-score">'+state.sim.score+'<small>%</small></div><p>'+esc(rating)+'</p><div class="mini-note">'+esc(L("note"))+'</div><div class="result-actions"><button class="btn accent" data-action="retry">'+esc(L("retry"))+'</button><a href="#/simulator" class="btn ghost">'+esc(L("again"))+'</a></div></section></div></main>';
- }
- const step=s.steps[state.sim.node];
- if(!step)return simulatorPage();
- const feedback=state.sim.feedback;
+ const c=scenarioBank.find(x=>x.id===id);if(!c)return simulatorPage();
+ if(!state.sim||state.sim.id!==id)state.sim={id,node:"discovery",marks:{knowledge:0,experience:0,selling:0},chosen:null,feedback:null,history:[],finished:false};
+ const run=state.sim;
+ if(run.finished)return resultDetail(c,run);
+ const stage=c.stages[run.node];if(!stage)return simulatorPage();
+ const fb=run.feedback, stepCount=run.history.filter(h=>h.node!=="recovery").length;
+ const steps=[["discovery",state.lang==="ar"?"فهم العميل":"Discovery"],["technical",state.lang==="ar"?"الجانب التقني":"Technical"],["evidence",state.lang==="ar"?"تجربة المنتج":"Demonstration"],["closing",state.lang==="ar"?"إغلاق البيع":"Closing"]];
+ const p=catalog.find(p=>p.id===c.product);
  return '<main id="content"><div class="wrap standard-page"><a href="#/simulator" class="back-link">← '+esc(L("simulation"))+'</a>'+
- '<div class="simple-heading"><span class="eyebrow dark">'+esc(T(s.level))+' · '+esc(catalog.find(p=>p.id===s.product)?.name??"TECNO")+'</span><h1>'+esc(T(s.name))+'</h1><p>'+esc(T(s.description))+'</p></div>'+
- '<div class="simulation-layout"><section class="conversation"><div class="conversation-top"><span>'+esc(L("process"))+'</span><span>'+esc(T({ar: "نقاطك حتى الآن",en:"Score so far"}))+' · '+state.sim.score+'</span></div>'+
- '<div class="customer-bubble"><div class="customer-avatar" aria-hidden="true">◉</div><div><div class="customer-label">'+esc(L("client"))+'</div><p>'+esc(T(step.client))+'</p></div></div>'+
- '<h2 class="question">'+esc(T(step.ask))+'</h2><p class="helper">'+esc(L("decision"))+'</p>'+
- '<div class="choices">'+step.choices.map((c,i)=>'<button class="choice '+(state.sim.chosen===i?"chosen":"")+'" type="button" data-choice="'+i+'" '+(feedback?"disabled":"")+'><span class="choice-index">'+String.fromCharCode(65+i)+'</span><span>'+esc(T(c.text))+'</span></button>').join("")+'</div>'+
- (feedback?'<div class="coaching"><strong>'+(feedback.pts>=20?"✓ ":"→ ")+esc(feedback.pts>=20?T({ar:"قرار مناسب",en:"Strong choice"}):T({ar:"فرصة للتحسين",en:"Room to improve"}))+'</strong><p>'+esc(T(feedback.feedback))+'</p><button id="continue" class="btn accent" data-action="continue">'+esc(L("continue"))+' ↗</button></div>':'')+'</section>'+
- '<aside class="coach-panel"><span class="eyebrow dark">FABE COACH</span><h3>'+esc(L("steps"))+'</h3><div class="coach-steps">'+["step1","step2","step3","step4"].map((x,i)=>'<div><span>'+(i+1)+'</span>'+esc(L(x))+'</div>').join("")+'</div><p>'+esc(L("note"))+'</p></aside></div></div></main>';
+ '<div class="scenario-heading"><div><span class="eyebrow dark">'+esc(c.model)+' · '+String(c.number).padStart(2,"0")+' / 10</span><h1>'+esc(T(c.title))+'</h1><p>'+esc(T(c.description))+'</p></div><img src="'+esc(productImage(p)||"")+'" alt="'+esc(p.name)+'"/></div>'+
+ '<div class="scenario-progress">'+steps.map(([id,name],i)=>'<div class="'+(run.node===id||id==="discovery"&&run.node==="recovery"?"active":stepCount>i?"done":"")+'"><strong>0'+(i+1)+'</strong><span>'+esc(name)+'</span></div>').join("")+'</div>'+
+ '<div class="simulation-layout"><section class="conversation"><div class="conversation-top"><span>SALES ROLEPLAY</span><span>'+esc(T(competencyLabels[stage.category]))+'</span></div>'+
+ '<div class="customer-bubble"><div class="customer-avatar">◉</div><div><div class="customer-label">'+esc(L("client"))+'</div><p>'+esc(T(stage.client))+'</p></div></div>'+
+ '<h2 class="question">'+esc(T(stage.ask))+'</h2><p class="helper">'+esc(L("decision"))+'</p><div class="choices">'+stage.choices.map((o,i)=>'<button data-choice="'+i+'" class="choice '+(run.chosen===i?"chosen":"")+'" '+(fb?"disabled":"")+'><span class="choice-index">'+String.fromCharCode(65+i)+'</span><span>'+esc(T(o.text))+'</span></button>').join("")+'</div>'+
+ (fb?'<div class="coaching"><strong>'+esc(state.lang==="ar"?"تحليل الإجابة":"Decision feedback")+'</strong><p>'+esc(T(fb.feedback))+'</p><button class="btn accent" data-action="continue">'+esc(L("continue"))+' ↗</button></div>':'')+'</section>'+
+ '<aside class="coach-panel"><span class="eyebrow dark">'+esc(state.lang==="ar"?"معايير التقييم":"ASSESSMENT CRITERIA")+'</span><h3>'+esc(state.lang==="ar"?"توزيع الدرجات":"Scoring weights")+'</h3><div class="weights">'+axes.map(k=>'<div><span>'+esc(T(competencyLabels[k]))+'</span><strong>'+Math.round(competencyWeights[k]*100)+'%</strong></div>').join("")+'</div></aside></div></div></main>';
 }
 document.addEventListener("click",event=>{
  const lang=event.target.closest("#language");
@@ -213,21 +237,28 @@ document.addEventListener("click",event=>{
   }
   if(action.dataset.action==="retry"){state.sim=null;render();return}
   if(action.dataset.action==="continue"){
-   const s=simulations.find(s=>s.id===state.sim?.id);const current=s?.steps?.[state.sim.node];const choice=current?.choices?.[state.sim.chosen];
-   if(!choice)return;
-   state.sim.history.push({step:state.sim.node,choice:state.sim.chosen});
-   state.sim.node=choice.next;state.sim.feedback=null;state.sim.chosen=null;
-   if(choice.next===null){state.sim.finished=true}else if(state.sim.history.length>12||!s.steps[choice.next]){state.sim.finished=true}
-   render();return
+   const c=scenarioBank.find(s=>s.id===state.sim?.id);
+   const option=c?.stages?.[state.sim.node]?.choices?.[state.sim.chosen];
+   if(!option)return;
+   state.sim.history.push({node:state.sim.node,option:state.sim.chosen});
+   state.sim.node=option.next;state.sim.chosen=null;state.sim.feedback=null;
+   if(option.next===null||state.sim.history.length>12)state.sim.finished=true;
+   render();return;
   }
  }
+ const filt=event.target.closest("[data-case-group]");
+ if(filt){state.caseGroup=filt.dataset.caseGroup;render();return}
  const choice=event.target.closest("[data-choice]");
  if(choice&&state.sim&&!state.sim.feedback){
-   const s=simulations.find(s=>s.id===state.sim.id);
-   const step=s?.steps[state.sim.node]; const n=Number(choice.dataset.choice);
-   const selected=step?.choices?.[n];if(!selected)return;
-   state.sim.chosen=n;state.sim.score+=selected.pts;state.sim.feedback=selected;render();return
+   const scenario=scenarioBank.find(s=>s.id===state.sim.id);
+   const option=scenario?.stages?.[state.sim.node]?.choices?.[Number(choice.dataset.choice)];
+   if(!option)return;
+   state.sim.chosen=Number(choice.dataset.choice);
+   state.sim.feedback=option;
+   for(const key of axes)state.sim.marks[key]+=Number(option.marks[key])||0;
+   render();return;
  }
+
 });
 document.addEventListener("input",event=>{
  if(event.target.id==="product-search"){
