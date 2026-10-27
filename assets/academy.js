@@ -352,6 +352,25 @@ document.addEventListener("click",event=>{
   if(action.dataset.action==="prev-lesson"||action.dataset.action==="next-lesson"){
    state.selectedLesson+=action.dataset.action==="next-lesson"?1:-1;state.lessonChoice=null;render();return
   }
+
+  if(action.dataset.action==="journey-restart"){
+   const id=state.journey?.id;
+   if(!id)return;
+   state.journey={id,index:0,choice:null,history:[]};
+   saveJourney();render();window.scrollTo({top:0,behavior:"instant"});return;
+  }
+  if(action.dataset.action==="journey-next"){
+   const run=state.journey;
+   const c=journeyCases.find(c=>c.id===run?.id);
+   const stage=c?.steps?.[run?.index];
+   const chosen=stage?.options?.[run?.choice];
+   if(!chosen||run.choice===null)return;
+   run.history.push({...chosen,dimension:stage.dimension,stage:stage.id});
+   run.index+=1;run.choice=null;
+   saveJourney();
+   if(run.index>=c.steps.length)saveJourneyResult(c,run);
+   render();window.scrollTo({top:0,behavior:"instant"});return;
+  }
   if(action.dataset.action==="retry-lesson"){state.lessonChoice=null;render();return}
     if(action.dataset.action==="retry"){state.sim=null;render();return}
   if(action.dataset.action==="continue"){
@@ -366,6 +385,16 @@ document.addEventListener("click",event=>{
  }
  const filt=event.target.closest("[data-case-group]");
  if(filt){state.caseGroup=filt.dataset.caseGroup;render();return}
+
+ const journeyChoice=event.target.closest("[data-journey-choice]");
+ if(journeyChoice){
+  const run=state.journey;
+  const c=journeyCases.find(c=>c.id===run?.id);
+  const options=c?.steps?.[run.index]?.options;
+  const index=Number(journeyChoice.dataset.journeyChoice);
+  if(!options?.[index]||run.choice!==null)return;
+  run.choice=index;saveJourney();render();return;
+ }
  const chosenLesson=event.target.closest("[data-lesson-answer]");
  if(chosenLesson){
   const course=courses.find(c=>c.id===path().split("/")[1]);
