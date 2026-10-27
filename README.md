@@ -8,7 +8,7 @@
 - Product catalog with specifications, FABE, private phone images
 - Courses, lessons, completion tracking
 - Branching customer simulations and formative assessments
-- Admin product editor (more content-management tools planned)
+- Admin product editor with private-bucket image upload (more content-management tools planned)
 
 ## Architecture
 - Public hosting: GitHub Pages **login interface only**

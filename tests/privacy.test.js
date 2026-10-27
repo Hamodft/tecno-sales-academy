@@ -22,4 +22,6 @@ test("private data and media are protected with RLS and private storage",()=>{
  assert.match(schema,/academy_is_employee/);
  assert.match(schema,/enable row level security/);
  assert.match(schema,/public\s*=\s*false/);
+ assert.match(portal,/staff-assets/);
+ assert.match(portal,/device_image/);
 });
