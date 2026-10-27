@@ -33,16 +33,35 @@ test("score dimensions are independently weighted 40,35,25",()=>{
  assert.equal(summarize({knowledge:0,experience:100,selling:0}).total,35);
  assert.equal(summarize({knowledge:0,experience:0,selling:100}).total,25);
 });
-test("every case includes a recovery route and can reach final result",()=>{
- for(const s of scenarioBank){
-  assert.equal(s.stages.discovery.choices[1].next,"recovery");
-  assert.equal(s.stages.recovery.choices[0].next,"technical");
-  assert.equal(s.stages.technical.choices[0].next,"evidence");
-  assert.equal(s.stages.evidence.choices[0].next,"closing");
-  assert.equal(s.stages.closing.choices[0].next,null);
-  assert.ok(s.stages.discovery.choices[0].marks.experience>0);
-  assert.ok(s.stages.technical.choices[0].marks.knowledge>0);
-  assert.ok(s.stages.closing.choices[0].marks.selling>0);
+
+const choiceValue=o=>Object.values(o.marks).reduce((a,b)=>a+b,0);
+const bestIndex=choices=>choices.reduce((winner,option,i)=>choiceValue(option)>choiceValue(choices[winner])?i:winner,0);
+test("all cases have reachable recovery and correct competency marks",()=>{
+ for(const scenario of scenarioBank){
+  const stage=scenario.stages;
+  assert.ok(stage.discovery.choices.some(o=>o.next==="recovery"));
+  for(const [key,next] of [["recovery","technical"],["technical","evidence"],["evidence","closing"],["closing",null]]){
+   assert.equal(stage[key].choices[bestIndex(stage[key].choices)].next,next);
+  }
+  assert.ok(stage.discovery.choices[bestIndex(stage.discovery.choices)].marks.experience>0);
+  assert.ok(stage.technical.choices[bestIndex(stage.technical.choices)].marks.knowledge>0);
+  assert.ok(stage.closing.choices[bestIndex(stage.closing.choices)].marks.selling>0);
+ }
+});
+test("best response is balanced among A, B, C, not consistently A",()=>{
+ for(const phase of ["discovery","technical","evidence","closing"]){
+  const tally=[0,0,0];
+  for(const scenario of scenarioBank){
+   const options=scenario.stages[phase].choices;
+   const winner=bestIndex(options);
+   assert.equal(options.filter(o=>choiceValue(o)===choiceValue(options[winner])).length,1);
+   tally[winner]++;
+  }
+  assert.ok(tally.every(count=>count>=8&&count<=12),phase+": "+tally.join(","));
+ }
+ for(const scenario of scenarioBank){
+  const indices=["discovery","technical","evidence","closing"].map(p=>bestIndex(scenario.stages[p].choices));
+  assert.ok(new Set(indices).size>1,scenario.id+" has repetitive positions");
  }
 });
 test("four sales learning paths cover 12 lessons",()=>{
