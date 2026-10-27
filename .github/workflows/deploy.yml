@@ -1,0 +1,46 @@
+name: Check and deploy academy
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: academy-pages
+  cancel-in-progress: true
+jobs:
+  checks:
+    name: Validate source and simulator
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Syntax and scenario graph tests
+        run: npm run check
+  deploy:
+    name: Publish public learning pages
+    if: github.event_name != 'pull_request'
+    needs: checks
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - name: Stage public files only
+        run: |
+          mkdir -p _site/assets
+          cp index.html favicon.svg .nojekyll robots.txt _site/
+          cp assets/*.js assets/*.css _site/assets/
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4
