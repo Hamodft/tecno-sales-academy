@@ -73,7 +73,7 @@ try{
  assert.equal(await page.locator(".communication-option:not([disabled])").count(),3);
  await page.goto(origin+"#/training");
  assert.equal(await page.locator(".communication-card").count(),6);
- assert.ok((await page.locator(".communication-summary").innerText()).includes("1/24"));
+ assert.ok((await page.locator(".training-progress-box").innerText()).includes("4%"),"lesson completion is reflected in overall training progress");
  await page.goto(origin+"#/simulator");
  await page.locator(".scenario-card").first().waitFor();
  assert.equal(await page.locator(".scenario-card").count(),30,"all 30 cases are listed");
