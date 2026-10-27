@@ -1,5 +1,6 @@
 
 const b=(ar,en)=>({ar,en});
+// Balanced answer positions are enforced in the scenario factory.
 // Each case has a distinct buyer situation and a product-specific proof point.
 const tech={
  camon:[
