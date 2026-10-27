@@ -23,10 +23,32 @@ jobs:
           node-version: "22"
       - name: Syntax and scenario graph tests
         run: npm run check
+  browser:
+    name: Browser and mobile experience smoke test
+    needs: checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install Playwright and Chromium
+        run: |
+          npm install --no-save playwright@1.57.0
+          npx playwright install --with-deps chromium
+      - name: Run real-browser journeys
+        run: node tests/browser.mjs
+      - name: Archive mobile screenshot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-smoke-preview
+          path: mobile-smoke.png
+          if-no-files-found: ignore
   deploy:
     name: Publish public learning pages
     if: github.event_name != 'pull_request'
-    needs: checks
+    needs: [checks, browser]
     runs-on: ubuntu-latest
     environment:
       name: github-pages
