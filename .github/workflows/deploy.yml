@@ -1,4 +1,4 @@
-name: Check and deploy academy
+name: Validate and deploy employee portal
 on:
   push:
     branches: [main]
@@ -14,39 +14,29 @@ concurrency:
   cancel-in-progress: true
 jobs:
   checks:
-    name: Validate source and simulator
+    name: Security and syntax checks
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: "22"
-      - name: Syntax and scenario graph tests
-        run: npm run check
+          node-version: '22'
+      - run: npm run check
   browser:
-    name: Browser and mobile experience smoke test
+    name: Staff-only portal browser tests
     needs: checks
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: "22"
-      - name: Install Playwright and Chromium
-        run: |
+          node-version: '22'
+      - run: |
           npm install --no-save playwright@1.57.0
           npx playwright install --with-deps chromium
-      - name: Run real-browser journeys
-        run: node tests/browser.mjs
-      - name: Archive mobile screenshot
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: mobile-smoke-preview
-          path: mobile-smoke.png
-          if-no-files-found: ignore
+      - run: node tests/browser.mjs
   deploy:
-    name: Publish public learning pages
+    name: Publish login portal without internal training content
     if: github.event_name != 'pull_request'
     needs: [checks, browser]
     runs-on: ubuntu-latest
@@ -56,11 +46,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
-      - name: Stage public files only
+      - name: Publish an explicit allowlist (NO internal data.js)
         run: |
           mkdir -p _site/assets
           cp index.html favicon.svg .nojekyll robots.txt _site/
-          cp assets/*.js assets/*.css _site/assets/
+          cp assets/portal.js assets/private.css assets/config.js _site/assets/
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site
