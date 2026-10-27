@@ -1,5 +1,6 @@
 
 import { catalog } from "./catalog.js";
+import {scenarioBank,competencyLabels,competencyWeights,summarize} from "./scenario-bank.js";
 import { courses, simulations, langText, validateScenario } from "./data.js";
 
 const $ = s => document.querySelector(s);
@@ -7,7 +8,7 @@ const esc = v => String(v ?? "").replace(/[&<>"']/g, ch => ({ "&":"&amp;", "<":"
 const state = {
   lang: localStorage.getItem("academy-language")==="en"?"en":"ar",
   query: "", series: "ALL", menu: false, sim: null,
-  selectedLesson: 0,
+  selectedLesson: 0, caseGroup:"all",
   completed: JSON.parse(localStorage.getItem("academy-lessons")||"[]")
 };
 const T = v => langText(v,state.lang);
@@ -77,9 +78,7 @@ function setLanguage(){
   document.documentElement.lang=state.lang;
   document.documentElement.dir=state.lang==="ar"?"rtl":"ltr";
 }
-function brand(){
-  return '<a class="brand" href="#/products" aria-label="TECNO Sales Academy"><span class="brand-square">T</span><span><strong>TECNO</strong><small>SALES ACADEMY</small></span></a>';
-}
+function brand(){return '<a class="brand" href="#/products" aria-label="TECNO Sales Academy"><img class="tecno-logo" src="./assets/tecno-logo.svg" alt="TECNO"/><span class="academy-word">SALES ACADEMY</span></a>';}
 function navLink(page,label){
   const active = path()===page || (page==="products" && path().startsWith("device/")) || (page==="training" && path().startsWith("lesson/")) || (page==="simulator" && path().startsWith("case/"));
   return '<a class="nav-link '+(active?"active":"")+'" href="'+href(page)+'">'+esc(L(label))+'</a>';
@@ -89,9 +88,7 @@ function header(){
   '<nav class="navigation '+(state.menu?"is-open":"")+'" aria-label="Primary">'+navLink("products","library")+navLink("training","courses")+navLink("simulator","simulation")+'</nav>'+
   '<div class="header-actions"><span class="internal-label">'+esc(L("guided"))+'</span><button id="language" class="language-btn" type="button">'+esc(L("language"))+'</button><button id="menu" class="menu-btn" aria-label="'+esc(L("mobileMenu"))+'" type="button">☰</button></div></div></header>';
 }
-function footer(){
- return '<footer class="footer"><div class="wrap footer-inner"><div>TECNO <span>SALES ACADEMY</span></div><p>'+esc(L("footer"))+'</p></div></footer>';
-}
+function footer(){return '<footer class="footer"><div class="wrap footer-inner"><div class="footer-brand"><img src="./assets/tecno-logo.svg" alt="TECNO"/><span>SALES ACADEMY</span></div><p>PRODUCT KNOWLEDGE · FABE · CUSTOMER EXPERIENCE</p></div></footer>';}
 function render(){
   state.menu=false; setLanguage();
   const seg=detailRoute();let body;
@@ -104,16 +101,13 @@ function render(){
   $("#app").innerHTML=header()+body+footer();
   document.title=(seg[0]==="device" ? (catalog.find(p=>p.id===seg[1])?.name||"TECNO")+" | " : "")+"TECNO Sales Academy";
 }
-function phoneVisual(p,large=false){
-  return '<div class="phone-stage '+(large?"large":"")+'" style="--product-accent:'+esc(p.accent)+'">'+
-    '<div class="glow"></div><div class="phone-body"><div class="camera-island"><i></i><i></i><i></i></div><div class="phone-brand">TECNO</div><div class="phone-line"></div></div>'+
-    '<div class="phone-shadow"></div><span class="media-label">'+esc(L("mediaPending"))+'</span></div>';
-}
+function productImage(p){const names={"camon-50-ultra":"camon-50-ultra.webp","pova-8-pro":"pova-8-series.webp","pova-curve-2":"pova-curve-2.webp"};return p&&names[p.id]?"./assets/products/"+names[p.id]:null;}
+function phoneVisual(p,large=false){const src=productImage(p);return src?'<div class="phone-stage product-photo-stage '+(large?"large":"")+'"><img class="real-phone-photo" src="'+src+'" loading="'+(large?"eager":"lazy")+'" alt="'+esc(p.name)+'"/></div>':'<div class="phone-stage product-photo-stage '+(large?"large":"")+'"><div class="phone-body"><div class="phone-brand">TECNO</div></div></div>';}
 function hero(){
  return '<div class="hero"><div class="hero-copy"><span class="eyebrow"><span class="eyebrow-dot"></span> '+esc(L("badge"))+'</span>'+
  '<h1>'+esc(L("knowledge"))+'<br/><span>'+esc(L("intro"))+'</span></h1><p>'+esc(L("details"))+'</p>'+
  '<div class="hero-actions"><button type="button" data-action="jump" data-target="catalog" class="btn accent">'+esc(L("enter"))+'</button><a href="#/training" class="btn ghost">'+esc(L("training"))+'</a></div>'+
- '<div class="hero-stats"><div><strong>'+catalog.length.toString().padStart(2,"0")+'</strong><small>'+esc(L("productCount"))+'</small></div><div><strong>'+courses.length.toString().padStart(2,"0")+'</strong><small>'+esc(L("courseCount"))+'</small></div><div><strong>'+simulations.length.toString().padStart(2,"0")+'</strong><small>'+esc(L("simCount"))+'</small></div></div></div>'+
+ '<div class="hero-stats"><div><strong>'+catalog.length.toString().padStart(2,"0")+'</strong><small>'+esc(L("productCount"))+'</small></div><div><strong>'+courses.length.toString().padStart(2,"0")+'</strong><small>'+esc(L("courseCount"))+'</small></div><div><strong>'+scenarioBank.length.toString().padStart(2,"0")+'</strong><small>'+esc(L("simCount"))+'</small></div></div></div>'+
  '<div class="hero-visual" aria-hidden="true"><div class="hero-visual-word">FABE</div><div class="floating-spec spec-top">Feature → Benefit</div><div class="floating-spec spec-bottom">Customer Experience <b>✓</b></div><div class="hero-mock-phone"><div class="mock-screen"><span>TECNO ACADEMY</span><strong>85<small>%</small></strong><span>SALES SKILL LEVEL</span><div class="mock-bars"><i></i><i></i><i></i><i></i><i></i></div></div></div></div></div>';
 }
 function card(p){
@@ -142,7 +136,8 @@ function libraryPage(){
 function devicePage(id){
  const p=catalog.find(x=>x.id===id);if(!p)return libraryPage();
  const fabeSteps=[["feature","F"],["advantage","A"],["benefit","B"],["evidence","E"]];
- const caseFor=simulations.find(s=>s.product===p.id);
+ const group=p.id==="camon-50-ultra"?"camon":p.id==="pova-8-pro"?"pova8":p.id==="pova-curve-2"?"curve":null;
+ const caseFor=scenarioBank.find(s=>s.group===group);
  return '<main id="content"><div class="wrap detail-page"><a href="#/products" class="back-link">← '+esc(L("back"))+'</a>'+
  '<div class="product-cover" style="--product-accent:'+esc(p.accent)+'"><div class="cover-photo">'+phoneVisual(p,true)+'</div><div class="cover-copy"><span class="eyebrow light">'+esc(p.series)+' · '+esc(p.code)+'</span><h1>'+esc(p.name)+'</h1><p>'+esc(T(p.lead))+'</p>'+
  '<div class="tag-row">'+p.tags.map(x=>'<span>'+esc(x)+'</span>').join("")+'</div>'+
