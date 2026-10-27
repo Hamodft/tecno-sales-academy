@@ -377,3 +377,100 @@ p{line-height:1.85}
 .card-bottom,.inline-link,.back-link{color:#006bff}
 .report-bignum{color:#cbe8ff}
 .score-track>span{background:linear-gradient(90deg,#006bff,#24b2d6)}
+
+
+/* Communication-first learning paths */
+.communication-page{padding-top:30px;padding-bottom:90px}
+.communication-hero{display:grid;grid-template-columns:1.35fr .8fr;min-height:340px;background:linear-gradient(115deg,#0a263d,#103c66 70%,#1c6d95);border-radius:26px;overflow:hidden;color:#fff;position:relative}
+.communication-hero-copy{padding:48px clamp(27px,4vw,65px);z-index:2}
+.communication-hero .eyebrow{color:#a5d3ff}
+.communication-hero h1{font-size:clamp(32px,4vw,52px);margin:17px 0}
+.communication-hero p{color:#c6e1f4;max-width:580px;font-size:15px}
+.communication-summary{display:flex;gap:37px;margin-top:33px}
+.communication-summary>div{display:flex;flex-direction:column;gap:4px}
+.communication-summary strong{font-size:28px;font-weight:900}
+.communication-summary span{font-size:11px;color:#aed2ea}
+.communication-hero-art{display:grid;place-items:center;position:relative;isolation:isolate}
+.communication-orb{font-size:190px;font-weight:700;color:#80d4ff52;text-shadow:0 0 30px #2c91df40}
+.bubble{position:absolute;background:#ffffffee;color:#164967;font-weight:800;border-radius:17px;font-size:14px;padding:14px 22px;box-shadow:0 15px 35px #081e3436}
+.bubble-one{top:55px;inset-inline-start:8%;transform:rotate(-8deg)}
+.bubble-two{bottom:75px;inset-inline-end:12%;transform:rotate(5deg)}
+.communication-hero-caption{position:absolute;bottom:30px;color:#bedff1;font-size:10px;letter-spacing:.18em;font-weight:850}
+.training-lead{display:flex;justify-content:space-between;align-items:end;gap:30px;margin:58px 0 28px}
+.training-lead>div:first-child{max-width:680px}
+.training-lead h2{font-size:clamp(23px,2.7vw,33px);margin:11px 0 8px}
+.training-lead p{font-size:13px;color:#6c828f}
+.training-progress-box{min-width:220px;border:1px solid var(--line);background:white;border-radius:16px;padding:20px}
+.training-progress-box>div:first-child{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:13px}
+.training-progress-box strong{font-size:26px;color:#006bff}
+.training-progress-box span{font-size:11px;color:#73919d}
+.training-progress{height:8px;border-radius:10px;background:#e4edf3;overflow:hidden;width:100%}
+.training-progress>span{display:block;height:100%;background:linear-gradient(90deg,#006bff,#4dcfbb);border-radius:10px}
+.communication-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.communication-card{min-height:460px;border-top:5px solid var(--path-color);padding:27px;overflow:hidden}
+.communication-card .course-head{width:100%;display:flex;align-items:center;justify-content:space-between}
+.communication-card .course-no{font-size:38px}
+.communication-card .course-symbol{display:grid;place-items:center;font-size:30px;background:#f0f6fa;border-radius:14px;width:53px;height:53px;color:var(--path-color);margin:0}
+.course-overline{color:var(--path-color);font-size:10px;letter-spacing:.12em;font-weight:900;margin-top:18px}
+.communication-card h2{font-size:23px;margin:8px 0 4px}
+.communication-card p{font-size:13px;color:#647d88;margin-top:10px;flex:initial}
+.skill-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:20px}
+.skill-tags span{background:#f2f6f8;color:#597783;padding:7px 9px;border-radius:8px;font-size:10px;font-weight:750}
+.communication-outcome{font-size:12px;color:#607886;background:#f7fbfc;border:1px solid #e7eef0;border-radius:10px;padding:11px 12px;line-height:1.8;margin-top:16px;min-height:65px}
+.course-progress-row{width:100%;display:flex;justify-content:space-between;color:#758b96;font-size:11px;margin-top:auto;padding-top:18px}
+.course-progress-row strong{color:var(--path-color)}
+.course-progress-track{width:100%;height:6px;background:#e9eff1;border-radius:20px;overflow:hidden;margin-top:10px}
+.course-progress-track i{display:block;height:100%;background:var(--path-color);border-radius:20px}
+.communication-card .course-foot{margin-top:17px}
+.communication-lesson-page{padding-top:33px}
+.communication-course-heading{display:flex;justify-content:space-between;align-items:end;gap:20px;margin-bottom:27px}
+.communication-course-heading h1{font-size:clamp(28px,3.3vw,42px);margin:12px 0}
+.communication-course-heading p{font-size:13px;color:#6d8590;max-width:720px}
+.course-completion{min-width:185px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:17px}
+.course-completion strong{display:block;font-size:24px;font-weight:900;color:#006bff}
+.course-completion>span{font-size:11px;color:#718a93;display:block;margin:4px 0 13px}
+.communication-lesson-grid{grid-template-columns:285px minmax(0,1fr)}
+.communication-sidebar{gap:7px}
+.sidebar-title{display:flex;justify-content:space-between;gap:10px;font-weight:850;margin-bottom:14px;color:#31515e}
+.sidebar-title strong{color:#006bff}
+.communication-sidebar .lesson-btn{width:100%;border:1px solid #e6ebee;min-height:63px;display:flex;text-align:start}
+.communication-sidebar .lesson-btn.active{background:#e8f3ff;border-color:#8fbaff;color:#124979}
+.communication-sidebar .chapter-no{font-size:15px;font-weight:900;color:#2778e4}
+.lesson-check{margin-inline-start:auto;color:#168d6a;font-weight:900}
+.communication-content{padding:36px 40px}
+.lesson-topline{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.lesson-status{font-size:11px;padding:7px 11px;background:#f0f3f6;color:#768996;border-radius:20px}
+.lesson-status.passed{background:#dff7ec;color:#16855b}
+.communication-content h2{font-size:30px;margin:16px 0 25px}
+.section-mini{font-size:11px;color:#1b82cf;font-weight:900;letter-spacing:.08em}
+.learning-principle{border-inline-start:3px solid #006bff;padding:5px 19px;margin:0 0 28px}
+.learning-principle p{font-size:15px;color:#425e6a;margin-top:10px;line-height:2}
+.communication-situation{background:#edf5fc;border:1px solid #dbe9f4;padding:23px;border-radius:15px;margin-bottom:30px}
+.situation-header{display:flex;gap:11px;align-items:center}
+.situation-header .customer-avatar{font-size:18px;display:grid;place-items:center;min-width:38px;height:38px;border-radius:11px;background:#dcebf9;color:#006bff}
+.situation-header small{color:#4986b8;font-size:10px;font-weight:850;letter-spacing:.05em}
+.situation-header h3{font-size:16px;margin:3px 0}
+.communication-situation>p{margin-top:17px;color:#204760;font-size:17px;line-height:1.8}
+.communication-quiz h3{font-size:19px;margin:11px 0 16px}
+.communication-options{display:grid;gap:11px}
+.communication-option{display:flex;gap:16px;align-items:start;padding:17px;border:1px solid #dce6ee;border-radius:12px;background:#fff;color:#34515f;text-align:start;line-height:1.8;transition:.2s}
+.communication-option span{display:grid;place-items:center;min-width:33px;height:33px;background:#eaf3fb;color:#006bff;border-radius:9px;font-weight:900}
+.communication-option strong{font-size:13px;font-weight:750}
+.communication-option:hover:not(:disabled){border-color:#137dd3;background:#f7fbff}
+.communication-option.selected{border-color:#006bff;background:#eef6ff}
+.communication-feedback{margin-top:20px;background:#e9f8f1;border:1px solid #c3ead8;padding:22px;border-radius:14px}
+.communication-feedback.partial{background:#fff9ed;border-color:#f2dfb0}
+.communication-feedback.needs-work{background:#fff3ef;border-color:#f3cbbb}
+.communication-feedback-head{display:flex;justify-content:space-between;gap:15px;align-items:center;color:#1c8b63}
+.communication-feedback:not(.excellent) .communication-feedback-head{color:#916233}
+.communication-feedback p{color:#42635c;font-size:13px;margin-top:9px}
+.model-response{border-top:1px solid #ffffffa0;margin-top:17px;padding-top:14px}
+.model-response span{font-size:11px;font-weight:900;color:#247798}
+.model-response p{color:#2b5364;font-weight:750}
+.communication-feedback-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:19px}
+.communication-drill{border:1px dashed #bdd5e2;border-radius:14px;background:#f9fcff;padding:21px;margin-top:24px}
+.communication-drill p{font-size:13px;color:#5f7886;margin-top:8px}
+.communication-lesson-actions{margin-top:30px}
+@media(max-width:1150px){.communication-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:860px){.communication-hero{grid-template-columns:1fr}.communication-hero-art{display:none}.training-lead{align-items:start}.communication-lesson-grid{grid-template-columns:1fr}.communication-sidebar{display:flex;overflow-x:auto}.communication-sidebar .lesson-btn{min-width:210px}.communication-sidebar .sidebar-title{display:none}}
+@media(max-width:620px){.communication-hero{min-height:0}.communication-hero-copy{padding:32px 23px}.communication-hero h1{font-size:32px}.communication-summary{gap:16px}.communication-summary strong{font-size:24px}.communication-summary span{font-size:10px}.training-lead{display:block;margin-top:36px}.training-progress-box{margin-top:20px}.communication-grid{grid-template-columns:1fr}.communication-card{min-height:430px}.communication-course-heading{display:block}.course-completion{margin-top:19px}.communication-content{padding:22px}.communication-content h2{font-size:25px}.communication-situation{padding:17px}.communication-situation>p{font-size:15px}.communication-option{padding:13px}.communication-option strong{font-size:12px}}
