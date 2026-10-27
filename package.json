@@ -5,7 +5,7 @@
   "type": "module",
   "description": "Direct-access TECNO training and product reference",
   "scripts": {
-    "check": "node --check assets/academy.js && node --check assets/catalog.js && node --check assets/data.js && node --test tests/academy.test.js",
+    "check": "node --check assets/academy.js && node --check assets/catalog.js && node --check assets/data.js && node --check assets/scenario-bank.js && node --check assets/communication.js && node --test tests/academy.test.js",
     "test": "node --test tests/academy.test.js"
   },
   "engines": {

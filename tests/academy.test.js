@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {readFileSync,existsSync} from "node:fs";
 import {catalog} from "../assets/catalog.js";
-import {courses} from "../assets/data.js";
+import {communicationTracks as courses,validateCommunication,totalCommunicationLessons} from "../assets/communication.js";
 import {scenarioBank,validateBank,summarize,competencyWeights} from "../assets/scenario-bank.js";
 const bilingual=v=>Boolean(v?.ar&&v?.en);
 test("product catalog and FABE references are bilingual",()=>{
@@ -64,14 +64,32 @@ test("best response is balanced among A, B, C, not consistently A",()=>{
   assert.ok(new Set(indices).size>1,scenario.id+" has repetitive positions");
  }
 });
-test("four sales learning paths cover 12 lessons",()=>{
- assert.equal(courses.length,4);
- assert.equal(courses.reduce((n,c)=>n+c.lessons.length,0),12);
+test("six communication tracks contain 24 interactive retail lessons",()=>{
+ assert.ok(validateCommunication());
+ assert.equal(courses.length,6);
+ assert.equal(totalCommunicationLessons(),24);
+ for(const course of courses){
+  assert.equal(course.lessons.length,4);
+  for(const lesson of course.lessons){
+   assert.ok(bilingual(lesson.title)&&bilingual(lesson.concept));
+   assert.ok(bilingual(lesson.situation)&&bilingual(lesson.model));
+   assert.ok(bilingual(lesson.drill));
+   assert.deepEqual(lesson.options.map(o=>o.score).sort((a,b)=>a-b),[0,50,100]);
+  }
+ }
+});
+test("communication practice does not reward always choosing A",()=>{
+ const best=[0,0,0];
+ for(const course of courses)for(const lesson of course.lessons){
+  best[lesson.options.findIndex(o=>o.score===100)]++;
+ }
+ assert.ok(best.every(x=>x>=6),"Best choices must vary across A/B/C: "+best.join(","));
 });
 test("GitHub Pages stages required components without login",()=>{
  const flow=readFileSync(".github/workflows/deploy.yml","utf8");
  const app=readFileSync("assets/academy.js","utf8");
  assert.match(flow,/assets\/scenario-bank\.js/);
+ assert.match(flow,/assets\/communication\.js/);
  assert.match(flow,/assets\/products\/\*\.webp/);
  assert.match(flow,/assets\/tecno-logo\.svg/);
  assert.match(app,/scenarioBank/);

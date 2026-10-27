@@ -8,7 +8,7 @@ A bilingual product-knowledge and sales-training academy for retail staff. Direc
 - Categorized specifications, FABE examples, hands-on demonstrations and customer objections
 - 30 interactive customer cases — 10 for each of CAMON 50 Ultra, POVA 8 Series, POVA Curve 2
 - Scenario outcomes score three skills: 40% technical knowledge, 35% customer experience, 25% selling skills
-- Four training tracks with 12 bilingual lessons
+- Six communication-first skill pathways with 24 bilingual lessons, interactive question-and-feedback exercises and local progress tracking
 - Arabic-first, English toggle, responsive for desktop and mobile
 
 ## Release
@@ -20,7 +20,7 @@ npm run check
 ```
 
 ## Content upkeep
-Specifications and sales demonstrations are maintained in `assets/catalog.js`. Scenarios are managed in `assets/scenario-bank.js`. Phone imagery is located in `assets/products/`; the wordmark is `assets/tecno-logo.svg`. Product details should match the supported market variant.
+Specifications and sales demonstrations are maintained in `assets/catalog.js`. Scenarios are managed in `assets/scenario-bank.js`. Communication-focused lessons are in `assets/communication.js`. Phone imagery is located in `assets/products/`; the wordmark is `assets/tecno-logo.svg`. Product details should match the supported market variant.
 
 ## Access
 GitHub Pages is accessible to anyone with the URL. Do not store employee personal information, confidential business details, or unpublished company data in the repository.

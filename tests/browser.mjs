@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import {spawn} from "node:child_process";
 import {chromium} from "playwright";
 import {scenarioBank} from "../assets/scenario-bank.js";
+import {communicationTracks} from "../assets/communication.js";
 const bestIndex=options=>options.reduce((best,o,i)=>{
  const score=x=>Object.values(x.marks).reduce((sum,v)=>sum+v,0);
  return score(o)>score(options[best])?i:best;
@@ -37,7 +38,20 @@ try{
  await page.goto(origin+"#/device/pova-curve-2");
  assert.ok(await page.locator(".cover-photo .real-phone-photo").evaluate(el=>el.complete&&el.naturalWidth>0));
  await page.goto(origin+"#/training");
- assert.equal(await page.locator(".course-card").count(),4);
+ assert.equal(await page.locator(".communication-card").count(),6);
+ await page.goto(origin+"#/lesson/first-impression");
+ await page.locator(".communication-option").first().waitFor();
+ assert.equal(await page.locator(".communication-option").count(),3);
+ const firstLesson=communicationTracks[0].lessons[0];
+ const correct=firstLesson.options.findIndex(o=>o.score===100);
+ await page.locator('[data-lesson-answer="'+correct+'"]').click();
+ await page.locator(".communication-feedback.excellent").waitFor();
+ assert.equal(await page.locator(".lesson-status.passed").count(),1);
+ await page.locator('[data-action="retry-lesson"]').click();
+ assert.equal(await page.locator(".communication-option:not([disabled])").count(),3);
+ await page.goto(origin+"#/training");
+ assert.equal(await page.locator(".communication-card").count(),6);
+ assert.ok((await page.locator(".communication-summary").innerText()).includes("1/24"));
  await page.goto(origin+"#/simulator");
  await page.locator(".scenario-card").first().waitFor();
  assert.equal(await page.locator(".scenario-card").count(),30,"all 30 cases are listed");
@@ -79,6 +93,11 @@ try{
  await page.locator("#menu").click();
  assert.ok(await page.locator(".navigation").isVisible());
  await page.screenshot({path:"mobile-reference.png",fullPage:true});
+ await page.goto(origin+"#/training");
+ assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),"training dashboard fits mobile");
+ await page.goto(origin+"#/lesson/first-impression");
+ await page.locator(".communication-option").first().waitFor();
+ assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),"communication lesson fits mobile");
  assert.deepEqual(errors,[],"no browser JavaScript errors");
  console.log("PASS: logo, all three real device photos, 30 unique scenarios, 3-axis scoring, branching, Arabic/English, mobile.");
 }finally{if(browser)await browser.close();server.kill("SIGTERM")}
