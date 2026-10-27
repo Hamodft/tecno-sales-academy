@@ -1,24 +1,26 @@
-# TECNO Sales Academy — direct product reference and training
+# TECNO Sales Academy
 
-A simple employee-focused Arabic/English knowledge base that opens **directly** to products and product details. No login, no registration, no account setup, no paid backend.
+A bilingual product-knowledge and sales-training academy for retail staff. Direct access; no sign-in.
 
-### What works
-- Four TECNO product references with categorized specifications, FABE, in-store demos, and common objections.
-- Search by model, code, or series; filter by CAMON, POVA and SPARK.
-- Four learning tracks, twelve lessons and on-device lesson completion.
-- Three branching customer-experience simulations with instant scores and coaching.
-- Responsive Arabic/English UI, designed for phone and desktop.
-- Ready for approved TECNO logo and official phone imagery (currently CSS placeholders).
+## Modules
+- CAMON 50 Ultra, POVA 8 Pro / POVA 8 Series, POVA Curve 2, and SPARK 50 5G device references
+- Official TECNO logo and supplied phone photography on catalog, device and scenario pages
+- Categorized specifications, FABE examples, hands-on demonstrations and customer objections
+- 30 interactive customer cases — 10 for each of CAMON 50 Ultra, POVA 8 Series, POVA Curve 2
+- Scenario outcomes score three skills: 40% technical knowledge, 35% customer experience, 25% selling skills
+- Four training tracks with 12 bilingual lessons
+- Arabic-first, English toggle, responsive for desktop and mobile
 
-### Run and test
+## Release
+Push to `main` triggers Node unit tests, Chromium browser/device tests, and GitHub Pages deployment.
+
 ```bash
 python3 -m http.server 8080
 npm run check
 ```
-Open http://localhost:8080. GitHub Pages deploy runs browser tests first.
 
-### Important access note
-GitHub Pages is a public site even when noindex is enabled. **Direct access without login does not restrict access to employees.** Publish only cleared general product facts and training content; do not commit sensitive staff information, internal unreleased product plans, confidential materials, or exam answer keys. These product facts are working training drafts to validate against current KSA SKUs. Local completion is not centrally reported.
+## Content upkeep
+Specifications and sales demonstrations are maintained in `assets/catalog.js`. Scenarios are managed in `assets/scenario-bank.js`. Phone imagery is located in `assets/products/`; the wordmark is `assets/tecno-logo.svg`. Product details should match the supported market variant.
 
-### Official images
-Provide approved TECNO logo (SVG/PNG) and official product renders as high-resolution PNG/WebP. When received, add to `assets/products/` and update the catalog display; do not assume generic placeholder renders are official.
+## Access
+GitHub Pages is accessible to anyone with the URL. Do not store employee personal information, confidential business details, or unpublished company data in the repository.

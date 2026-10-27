@@ -58,7 +58,9 @@ jobs:
         run: |
           mkdir -p _site/assets
           cp index.html favicon.svg .nojekyll robots.txt _site/
-          cp assets/academy.js assets/academy.css assets/catalog.js assets/data.js assets/scenario-bank.js _site/assets/
+          cp assets/academy.js assets/academy.css assets/catalog.js assets/data.js assets/scenario-bank.js assets/tecno-logo.svg _site/assets/
+          mkdir -p _site/assets/products
+          cp assets/products/*.webp _site/assets/products/
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site
