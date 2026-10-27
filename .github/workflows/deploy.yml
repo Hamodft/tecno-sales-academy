@@ -1,4 +1,4 @@
-name: Validate and deploy employee portal
+name: Test and publish TECNO Academy
 on:
   push:
     branches: [main]
@@ -10,11 +10,11 @@ permissions:
   pages: write
   id-token: write
 concurrency:
-  group: academy-pages
+  group: tecno-pages
   cancel-in-progress: true
 jobs:
   checks:
-    name: Security and syntax checks
+    name: Content and source tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -23,7 +23,7 @@ jobs:
           node-version: '22'
       - run: npm run check
   browser:
-    name: Staff-only portal browser tests
+    name: Full browser and mobile smoke tests
     needs: checks
     runs-on: ubuntu-latest
     steps:
@@ -31,14 +31,22 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: |
+      - name: Install Chromium
+        run: |
           npm install --no-save playwright@1.57.0
           npx playwright install --with-deps chromium
       - run: node tests/browser.mjs
+      - name: Save mobile preview
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-reference-preview
+          path: mobile-reference.png
+          if-no-files-found: ignore
   deploy:
-    name: Publish login portal without internal training content
+    name: Deploy direct-access knowledge base
     if: github.event_name != 'pull_request'
-    needs: [checks, browser]
+    needs: [checks,browser]
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -46,11 +54,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
-      - name: Publish an explicit allowlist (NO internal data.js)
+      - name: Stage website files
         run: |
           mkdir -p _site/assets
           cp index.html favicon.svg .nojekyll robots.txt _site/
-          cp assets/portal.js assets/private.css assets/config.js _site/assets/
+          cp assets/academy.js assets/academy.css assets/catalog.js assets/data.js _site/assets/
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site

@@ -1,12 +1,12 @@
 {
   "name": "tecno-sales-academy",
-  "version": "2.0.0-internal",
+  "version": "3.0.0",
   "private": true,
   "type": "module",
-  "description": "Employee-only product reference and FABE learning portal",
+  "description": "Direct-access TECNO training and product reference",
   "scripts": {
-    "test": "node --test tests/privacy.test.js",
-    "check": "node --check assets/portal.js && node --check assets/config.js && node --test tests/privacy.test.js"
+    "check": "node --check assets/academy.js && node --check assets/catalog.js && node --check assets/data.js && node --test tests/academy.test.js",
+    "test": "node --test tests/academy.test.js"
   },
   "engines": {
     "node": ">=20"

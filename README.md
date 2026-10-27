@@ -1,44 +1,24 @@
-# TECNO Sales Academy — Employee-only training platform
+# TECNO Sales Academy — direct product reference and training
 
-> **Security status:** The public GitHub Pages deployment is an authentication shell only. All product specifications, courses, FABE scripts, scenarios, and media must be loaded from an authenticated database with RLS. **Until Supabase is configured, employee sign-in is intentionally disabled.**
+A simple employee-focused Arabic/English knowledge base that opens **directly** to products and product details. No login, no registration, no account setup, no paid backend.
 
-## Scope
-- Staff only: invite + admin approval, no public signup
-- Arabic/English, mobile responsive
-- Product catalog with specifications, FABE, private phone images
-- Courses, lessons, completion tracking
-- Branching customer simulations and formative assessments
-- Admin product editor with private-bucket image upload (more content-management tools planned)
+### What works
+- Four TECNO product references with categorized specifications, FABE, in-store demos, and common objections.
+- Search by model, code, or series; filter by CAMON, POVA and SPARK.
+- Four learning tracks, twelve lessons and on-device lesson completion.
+- Three branching customer-experience simulations with instant scores and coaching.
+- Responsive Arabic/English UI, designed for phone and desktop.
+- Ready for approved TECNO logo and official phone imagery (currently CSS placeholders).
 
-## Architecture
-- Public hosting: GitHub Pages **login interface only**
-- Employee information: Supabase Auth + Postgres with Row Level Security
-- Product photos: Supabase Storage private \`staff-assets\` bucket with signed URLs
-- Configuration: \`assets/config.js\` with only public Supabase URL and publishable key
-- Secret service-role keys and employee information **never** in GitHub or browser
-- Content authoring: admin account and Supabase database, never embed private data in JS assets
+### Run and test
+```bash
+python3 -m http.server 8080
+npm run check
+```
+Open http://localhost:8080. GitHub Pages deploy runs browser tests first.
 
-## Important: public repository history
-This repository has historically been public and previously contained demonstration product information in tracked JavaScript. Removing those files from the deployment does not erase them from Git history. If all training source materials must be confidential, change the repository to **Private** through GitHub > Settings > General > Danger Zone. Depending on GitHub plan, Pages hosting from a private repository may require a different publishing arrangement; GitHub Pages itself remains publicly reachable, so confidentiality MUST be enforced by server-side data access rules.
+### Important access note
+GitHub Pages is a public site even when noindex is enabled. **Direct access without login does not restrict access to employees.** Publish only cleared general product facts and training content; do not commit sensitive staff information, internal unreleased product plans, confidential materials, or exam answer keys. These product facts are working training drafts to validate against current KSA SKUs. Local completion is not centrally reported.
 
-## Provisioning (mandatory for working staff access)
-1. Create a dedicated Supabase project with approved organization policies.
-2. Apply \`supabase/schema.sql\` in the trusted SQL editor.
-3. Disable public signup in Supabase Auth. Invite approved employees.
-4. Set the allowed redirect URL to \`https://hamodft.github.io/tecno-sales-academy/\` and site URL accordingly.
-5. Set public Supabase URL and publishable/anon key in \`assets/config.js\` (not service-role keys).
-6. Activate first admin via trusted SQL Editor after first sign-in:
-   \`update public.profiles set role='admin',is_employee=true,is_active=true where id='<verified-user-uuid>';\`
-7. Invite and approve staff accounts with \`is_employee=true,is_active=true\`.
-8. Upload approved company logo and official product renders to a **private** storage bucket; record paths in product records.
-9. Enter and verify TECNO KSA-specific specs through admin panel (model/market/SKU/version), then publish them.
-10. Test an anonymous user, a pending user, an employee, and an admin. Only staff should ever receive content.
-
-**Notice:** Client-side simulation scores are training feedback, not tamper-proof employee performance evidence. Secure scoring server-side before using for HR decisions.
-
-## Development
-Run \`python3 -m http.server 8080\`, then navigate to localhost:8080.
-Run \`npm run check\` for security/syntax tests.
-Playwright browser tests run in GitHub Actions before deployment.
-
-Not an official TECNO deployment until branding/content approvals are complete.
+### Official images
+Provide approved TECNO logo (SVG/PNG) and official product renders as high-resolution PNG/WebP. When received, add to `assets/products/` and update the catalog display; do not assume generic placeholder renders are official.
