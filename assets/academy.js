@@ -129,7 +129,7 @@ function libraryPage(){
  '<div class="catalog-tools"><label class="search-field"><span aria-hidden="true">⌕</span><input id="product-search" type="search" value="'+esc(state.query)+'" placeholder="'+esc(L("search"))+'" aria-label="'+esc(L("search"))+'"/></label>'+
  '<div class="filter-row">'+["ALL","CAMON","POVA","SPARK"].map(s=>'<button type="button" data-series="'+s+'" class="filter '+(state.series===s?"selected":"")+'">'+esc(s==="ALL"?L("all"):s)+'</button>').join("")+'</div></div>'+
  '<div class="device-grid" id="product-grid">'+cards()+'</div>'+
- '<p class="source-note">'+esc(L("source"))+'</p></section>'+
+ '</section>'+
  '<section class="journey"><div><span class="eyebrow dark">'+esc(L("objectives"))+'</span><h2>'+esc(L("steps"))+'</h2></div><div class="journey-steps">'+["step1","step2","step3","step4"].map((k,i)=>'<div><span>0'+(i+1)+'</span><strong>'+esc(L(k))+'</strong></div>').join("")+'</div></section>'+
  '</div></main>';
 }
@@ -149,12 +149,12 @@ function devicePage(id){
  '<aside class="detail-aside"><div class="aside-card"><div class="eyebrow dark">'+esc(L("demos"))+'</div><h3>'+esc(L("demos"))+'</h3><ol>'+p.demos.map(x=>'<li>'+esc(T(x))+'</li>').join("")+'</ol></div>'+
  '<div class="aside-card"><div class="eyebrow dark">'+esc(L("objections"))+'</div>'+p.objections.map(x=>'<div class="objection"><strong>'+esc(T(x.q))+'</strong><p>'+esc(T(x.a))+'</p></div>').join("")+'</div>'+
  '<div class="aside-card dark-aside"><div class="eyebrow">PRACTICE WITH A CUSTOMER</div><h3>'+esc(L("play"))+'</h3><p>'+esc(L("simDesc"))+'</p><a href="'+href(caseFor?"case/"+caseFor.id:"simulator")+'" class="btn accent">'+esc(L("simCta"))+' ↗</a></div></aside></div>'+
- '<p class="source-note">'+esc(L("source"))+'</p></div></main>';
+ (group?'<div class="model-scenarios"><div class="section-heading"><div><span class="eyebrow dark">SALES ASSESSMENT</span><h2>'+esc(state.lang==="ar"?"10 سيناريوهات بيع لهذا الموديل":"10 sales scenarios for this model")+'</h2></div></div><div class="model-case-grid">'+(group?scenarioBank.filter(c=>c.group===group).map(c=>'<a class="model-case-link" href="'+href("case/"+c.id)+'"><span>'+String(c.number).padStart(2,"0")+'</span><strong>'+esc(T(c.title))+'</strong><span>↗</span></a>').join(""):'')+'</div></div></main>': '</div></main>');
 }
 function trainingPage(){
  return '<main id="content"><div class="wrap standard-page"><div class="simple-heading"><span class="eyebrow dark">LEARNING TRACKS</span><h1>'+esc(L("coursesTitle"))+'</h1><p>'+esc(L("coursesDesc"))+'</p></div>'+
  '<div class="training-grid">'+courses.map((c,i)=>'<a href="'+href("lesson/"+c.id)+'" class="course-card"><div class="course-no">'+c.index+'</div><div class="course-symbol">'+c.icon+'</div><div class="eyebrow dark">'+esc(T(c.tag))+'</div><h2>'+esc(T(c.title))+'</h2><p>'+esc(T(c.description))+'</p><div class="course-foot"><span>'+c.lessons.length+' '+esc(L("lessons"))+'</span><span>↗</span></div></a>').join("")+'</div>'+
- '<div class="mini-note">'+esc(L("saved"))+'</div></div></main>';
+ '</div></main>';
 }
 function lessonPage(id){
  const course=courses.find(c=>c.id===id);if(!course)return trainingPage();
