@@ -112,7 +112,7 @@ function phoneVisual(p,large=false){
 function hero(){
  return '<div class="hero"><div class="hero-copy"><span class="eyebrow"><span class="eyebrow-dot"></span> '+esc(L("badge"))+'</span>'+
  '<h1>'+esc(L("knowledge"))+'<br/><span>'+esc(L("intro"))+'</span></h1><p>'+esc(L("details"))+'</p>'+
- '<div class="hero-actions"><a href="#/products#catalog" class="btn accent">'+esc(L("enter"))+'</a><a href="#/training" class="btn ghost">'+esc(L("training"))+'</a></div>'+
+ '<div class="hero-actions"><button type="button" data-action="jump" data-target="catalog" class="btn accent">'+esc(L("enter"))+'</button><a href="#/training" class="btn ghost">'+esc(L("training"))+'</a></div>'+
  '<div class="hero-stats"><div><strong>'+catalog.length.toString().padStart(2,"0")+'</strong><small>'+esc(L("productCount"))+'</small></div><div><strong>'+courses.length.toString().padStart(2,"0")+'</strong><small>'+esc(L("courseCount"))+'</small></div><div><strong>'+simulations.length.toString().padStart(2,"0")+'</strong><small>'+esc(L("simCount"))+'</small></div></div></div>'+
  '<div class="hero-visual" aria-hidden="true"><div class="hero-visual-word">FABE</div><div class="floating-spec spec-top">Feature → Benefit</div><div class="floating-spec spec-bottom">Customer Experience <b>✓</b></div><div class="hero-mock-phone"><div class="mock-screen"><span>TECNO ACADEMY</span><strong>85<small>%</small></strong><span>SALES SKILL LEVEL</span><div class="mock-bars"><i></i><i></i><i></i><i></i><i></i></div></div></div></div></div>';
 }
@@ -146,7 +146,7 @@ function devicePage(id){
  return '<main id="content"><div class="wrap detail-page"><a href="#/products" class="back-link">← '+esc(L("back"))+'</a>'+
  '<div class="product-cover" style="--product-accent:'+esc(p.accent)+'"><div class="cover-photo">'+phoneVisual(p,true)+'</div><div class="cover-copy"><span class="eyebrow light">'+esc(p.series)+' · '+esc(p.code)+'</span><h1>'+esc(p.name)+'</h1><p>'+esc(T(p.lead))+'</p>'+
  '<div class="tag-row">'+p.tags.map(x=>'<span>'+esc(x)+'</span>').join("")+'</div>'+
- '<div class="cover-links"><a href="#specifications" class="btn accent">'+esc(L("specs"))+'</a><a href="#fabe" class="btn ghost">'+esc(L("fabe"))+'</a></div></div></div>'+
+ '<div class="cover-links"><button type="button" data-action="jump" data-target="specifications" class="btn accent">'+esc(L("specs"))+'</button><button type="button" data-action="jump" data-target="fabe" class="btn ghost">'+esc(L("fabe"))+'</button></div></div></div>'+
  '<div class="detail-grid"><div class="detail-main"><section id="specifications" class="paper-section"><div class="section-heading compact"><div><span class="eyebrow dark">DEVICE REFERENCE</span><h2>'+esc(L("specs"))+'</h2></div></div>'+
  p.specs.map(g=>'<div class="spec-group"><h3>'+esc(T(g.group))+'</h3><div class="spec-rows">'+g.rows.map(r=>'<div><span>'+esc(r[0])+'</span><strong>'+esc(r[1])+'</strong></div>').join("")+'</div></div>').join("")+
  '</section><section id="fabe" class="paper-section"><div class="section-heading compact"><div><span class="eyebrow dark">FEATURE → EVIDENCE</span><h2>'+esc(L("fabe"))+'</h2></div></div>'+
@@ -207,6 +207,7 @@ document.addEventListener("click",event=>{
  if(lesson){state.selectedLesson=Number(lesson.dataset.lesson);render();return}
  const action=event.target.closest("[data-action]");
  if(action){
+  if(action.dataset.action==="jump"){document.getElementById(action.dataset.target)?.scrollIntoView({behavior:"smooth",block:"start"});return}
   if(action.dataset.action==="complete"){
    const key=path().split("/")[1]+":"+state.selectedLesson;
    if(!state.completed.includes(key)){state.completed.push(key);localStorage.setItem("academy-lessons",JSON.stringify(state.completed))}
