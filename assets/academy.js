@@ -158,6 +158,89 @@ function devicePage(id){
  (group?'<div class="model-scenarios"><div class="section-heading"><div><span class="eyebrow dark">SALES ASSESSMENT</span><h2>'+esc(state.lang==="ar"?"10 سيناريوهات بيع لهذا الموديل":"10 sales scenarios for this model")+'</h2></div></div><div class="model-case-grid">'+(group?scenarioBank.filter(c=>c.group===group).map(c=>'<a class="model-case-link" href="'+href("case/"+c.id)+'"><span>'+String(c.number).padStart(2,"0")+'</span><strong>'+esc(T(c.title))+'</strong><span>↗</span></a>').join(""):'')+'</div></div></main>': '</div></main>');
 }
 
+
+function journeyEntry(){
+ const ar=state.lang==="ar",word=(a,b)=>ar?a:b;
+ const labels=[
+  word("استقبال","Welcome"),word("استماع","Listening"),word("اكتشاف","Discovery"),
+  word("ترشيح","Match"),"FABE",word("تجربة","Demo"),word("اعتراض","Objection"),
+  word("إغلاق","Closing"),word("متابعة","After-sales")
+ ];
+ const best=Object.values(state.journeyRecords).reduce((max,r)=>Math.max(max,Number(r?.total)||0),0);
+ const records=Object.keys(state.journeyRecords).length;
+ return '<section class="sales-journey-hero" aria-label="'+esc(word("رحلة العميل الكاملة","Complete customer journey"))+'"><div class="sj-hero-copy"><span class="sj-eyebrow">CUSTOMER JOURNEY · INTERACTIVE SALES TRAINING</span>'+
+ '<h1>'+esc(word("من أول ترحيب إلى آخر انطباع","From the first hello to a lasting impression"))+'</h1>'+
+ '<p>'+esc(word("عِش تجربة موظف المبيعات خطوة بخطوة. العميل يتفاعل مع قراراتك؛ تستمع، تكتشف احتياجه، ترشّح الجهاز، تطبق FABE، تتعامل مع الاعتراض، وتُنهي البيع باحتراف.","Step into a full retail sales conversation. Your choices shape the customer's response as you discover needs, recommend, demonstrate, handle objections and close."))+'</p>'+
+ '<div class="sj-hero-facts"><span><b>09</b>'+esc(word("مراحل مترابطة","Connected stages"))+'</span><span><b>03</b>'+esc(word("شخصيات عملاء","Customer personas"))+'</span><span><b>04</b>'+esc(word("معايير أداء","Performance skills"))+'</span></div>'+
+ '<a class="sj-primary" href="#/journey/camera">'+esc(word("ابدأ التجربة الكاملة","Start the full experience"))+' <span>↗</span></a></div>'+
+ '<div class="sj-hero-graphic" aria-hidden="true"><div class="sj-orbit"></div><div class="sj-hero-symbol">CX</div><div class="sj-hero-float one">'+esc(word("أفهم احتياجك","I understand your needs"))+'</div><div class="sj-hero-float two">'+esc(word("خلنا نجرب","Let's try it"))+'</div><div class="sj-hero-graphic-foot">LISTEN · CONNECT · DEMONSTRATE</div></div></section>'+
+ '<section class="sj-path-overview"><div class="sj-section-title"><div><span class="eyebrow dark">END-TO-END JOURNEY</span><h2>'+esc(word("رحلة البيع في 9 مراحل","9 stages of a successful customer journey"))+'</h2></div>'+(records?'<span class="sj-best">'+esc(word("أفضل نتيجة: ","Best result: "))+best+'%</span>':'')+'</div>'+
+ '<div class="sj-step-strip">'+labels.map((label,i)=>'<div class="sj-step-label"><span>'+String(i+1).padStart(2,"0")+'</span><strong>'+esc(label)+'</strong></div>').join("")+'</div>'+
+ '<div class="sj-section-title sj-persona-title"><div><span class="eyebrow dark">PRACTICE WITH REAL NEEDS</span><h2>'+esc(word("اختر عميلًا وابدأ المحادثة","Choose a customer and begin"))+'</h2><p>'+esc(word("لكل عميل أولويات واعتراضات مختلفة. قرارك يغيّر مستوى ثقته وتقييمك.","Every customer has different priorities. Your choices affect trust and your final result."))+'</p></div></div>'+
+ '<div class="sj-persona-grid">'+journeyCases.map(c=>{
+  const record=state.journeyRecords[c.id];
+  return '<a href="#/journey/'+c.id+'" class="sj-persona" style="--sj-accent:'+c.accent+'"><div class="sj-persona-image"><img loading="lazy" src="./assets/products/'+esc(c.image)+'" alt="'+esc(c.device)+'"></div><div class="sj-persona-text"><span class="sj-persona-name">'+esc(T(c.name))+'</span><h3>'+esc(c.device)+'</h3><p>'+esc(T(c.subtitle))+'</p><div class="sj-persona-bottom"><span>'+(record?esc(word("آخر نتيجة ","Latest score "))+record.total+'%':esc(word("ابدأ المحادثة","Start conversation")))+'</span><b>↗</b></div></div></a>';
+ }).join("")+'</div></section>';
+}
+function saveJourney(){
+ localStorage.setItem("academy-journey-current",JSON.stringify(state.journey));
+}
+function saveJourneyResult(c,run){
+ const report=journeySummary(run.history);
+ state.journeyRecords[c.id]={total:report.total,scores:report.scores,completedAt:new Date().toISOString()};
+ localStorage.setItem("academy-journey-records",JSON.stringify(state.journeyRecords));
+}
+function journeyResult(c,run){
+ const ar=state.lang==="ar",word=(a,b)=>ar?a:b,report=journeySummary(run.history);
+ const levels={
+ excellent:word("أداء احترافي","Excellent performance"),
+ proficient:word("أداء متمكن","Proficient performance"),
+ developing:word("تقدم جيد، واصل التطوير","Good progress, keep improving"),
+ needsWork:word("تحتاج إلى تدريب إضافي","More practice recommended")
+ };
+ const weak=Object.keys(report.scores).reduce((a,b)=>report.scores[b]<report.scores[a]?b:a,"communication");
+ const tips={
+ communication:word("ابدأ بإصغاء فعال وسؤال مفتوح، ثم لخّص ما سمعته قبل العرض.","Ask open questions, listen actively and summarize before pitching."),
+ experience:word("أشرك العميل في التجربة، وراجع توقعاته، واشرح التسليم والدعم.","Involve the customer in hands-on trials and communicate after-sales support."),
+ technical:word("اربط ميزة صحيحة بالفائدة، ثم قدّم دليلًا عمليًا يناسب الاستخدام.","Connect accurate features to personal benefits and live proof."),
+ selling:word("عالج الاعتراض بصدق، وقارن الخيارات، وأغلق البيع دون ضغط.","Handle concerns honestly, compare options and close without pressure.")
+ };
+ const metrics=Object.entries(journeyMetrics).map(([key,label])=>'<div class="sj-result-metric"><div class="sj-metric-label"><strong>'+esc(T(label))+'</strong><span>'+report.scores[key]+'%</span></div><div class="sj-metric-track"><i style="width:'+report.scores[key]+'%"></i></div><small>'+journeyWeights[key]+'% '+esc(word("من النتيجة النهائية","weight"))+'</small></div>').join("");
+ const story=c.steps.map((step,i)=>{
+  const action=run.history[i];
+  return '<div class="sj-recap-item"><span>'+String(i+1).padStart(2,"0")+'</span><div><strong>'+esc(T(step.title))+'</strong><p>'+esc(T(step.options.find(o=>o.text.ar===action?.text?.ar)?.text||step.title))+'</p></div><b class="'+(action?.quality===2?"positive":action?.quality===1?"mixed":"negative")+'">'+(action?.quality===2?"✓":action?.quality===1?"~":"×")+'</b></div>';
+ }).join("");
+ return '<main id="content" class="sj-journey-page"><div class="wrap"><a href="#/training" class="back-link">← '+esc(word("مسارات التدريب","Training"))+'</a>'+
+ '<header class="sj-result-hero"><span class="sj-eyebrow">CUSTOMER EXPERIENCE · FINAL ASSESSMENT</span><h1>'+esc(word("انتهت رحلة العميل","Your customer journey is complete"))+'</h1><p>'+esc(T(c.name))+' · '+esc(c.device)+'</p><div class="sj-result-number">'+report.total+'<small>%</small></div><strong class="sj-result-level">'+esc(levels[report.level])+'</strong><p>'+esc(word("تم تقييم قراراتك على مراحل البيع التسع.","Your decisions were assessed across all nine stages."))+'</p></header>'+
+ '<section class="sj-result-content"><div class="sj-results-metrics"><h2>'+esc(word("تقييم المهارات","Competency breakdown"))+'</h2>'+metrics+'</div><div class="sj-priority"><span class="eyebrow dark">DEVELOPMENT PRIORITY</span><h2>'+esc(T(journeyMetrics[weak]))+'</h2><p>'+esc(tips[weak])+'</p><div class="sj-trust-score">'+esc(word("ثقة العميل بنهاية التجربة","Simulated customer confidence"))+' <b>'+report.trust+'%</b></div></div></section>'+
+ '<section class="sj-recap"><h2>'+esc(word("مراجعة قراراتك التسعة","Review your nine decisions"))+'</h2><div class="sj-recap-grid">'+story+'</div></section>'+
+ '<div class="sj-end-actions"><button class="sj-primary" data-action="journey-restart">'+esc(word("أعد التجربة","Try again"))+' ↻</button><a class="sj-secondary" href="#/training">'+esc(word("اختر عميلاً آخر","Choose another customer"))+'</a><a class="sj-secondary" href="#/simulator">'+esc(word("محاكاة المنتجات","Product simulator"))+'</a></div></div></main>';
+}
+function journeyPage(id){
+ const c=journeyCases.find(x=>x.id===id);
+ if(!c)return trainingPage();
+ if(!state.journey||state.journey.id!==id||!Array.isArray(state.journey.history)){
+  state.journey={id,index:0,choice:null,history:[]};saveJourney();
+ }
+ const run=state.journey;
+ if(run.index>=c.steps.length)return journeyResult(c,run);
+ const step=c.steps[run.index],option=run.choice===null?null:step.options[run.choice];
+ const report=journeySummary(run.history);
+ const ar=state.lang==="ar",word=(a,b)=>ar?a:b;
+ const trust=report.trust,stageText=String(run.index+1).padStart(2,"0")+' / 09';
+ const prefix=run.index>0&&trust<35?word("أنا لسه مو مقتنع بكلامك. ","I'm still not convinced. "):"";
+ const timeline=c.steps.map((s,i)=>'<div class="sj-timeline-item '+(i===run.index?"current":i<run.index?"done":"")+'"><span class="sj-timeline-num">'+String(i+1).padStart(2,"0")+'</span><div><strong>'+esc(T(s.title))+'</strong><small>'+esc(T(journeyMetrics[s.dimension]))+'</small></div>'+(i<run.index?'<span class="sj-check">✓</span>':'')+'</div>').join("");
+ return '<main id="content" class="sj-journey-page"><div class="wrap"><a href="#/training" class="back-link">← '+esc(word("مسارات التدريب","Training"))+'</a>'+
+ '<div class="sj-play-heading"><div><span class="eyebrow dark">CUSTOMER JOURNEY · '+stageText+'</span><h1>'+esc(T(c.name))+'</h1><p>'+esc(T(c.subtitle))+'</p></div><div class="sj-play-device"><img src="./assets/products/'+esc(c.image)+'" alt="'+esc(c.device)+'"></div></div>'+
+ '<div class="sj-progress-track"><span style="width:'+(run.index/c.steps.length*100)+'%"></span></div>'+
+ '<div class="sj-play-layout"><aside class="sj-timeline"><div class="sj-timeline-title">'+esc(word("مراحل رحلة العميل","Customer journey stages"))+'</div>'+timeline+'</aside>'+
+ '<div class="sj-play-center"><div class="sj-dialogue-top"><span>'+esc(T(step.title))+'</span><div class="sj-confidence">'+esc(word("ثقة العميل","Customer trust"))+' <strong>'+trust+'%</strong></div></div>'+
+ '<div class="sj-chat-bubble"><div class="sj-chat-avatar">'+esc(c.avatar)+'</div><div><span>'+esc(T(c.name))+'</span><p>“'+esc(prefix+T(step.prompt))+'”</p></div></div>'+
+ '<h2 class="sj-choice-heading">'+esc(word("ما أفضل تصرف في هذه اللحظة؟","What is the best next action?"))+'</h2>'+
+ '<div class="sj-answer-grid">'+step.options.map((o,i)=>'<button class="sj-answer '+(run.choice===i?"selected":"")+'" data-journey-choice="'+i+'" '+(option?"disabled":"")+'><span>'+String.fromCharCode(65+i)+'</span><strong>'+esc(T(o.text))+'</strong></button>').join("")+'</div>'+
+ (option?'<div class="sj-feedback '+(option.quality===2?"good":option.quality===1?"partial":"poor")+'"><div class="sj-feedback-grade"><strong>'+esc(option.quality===2?word("تصرف ممتاز","Strong decision"):option.quality===1?word("مقبول ويحتاج تطويرًا","Could be stronger"):word("هذا التصرف يضعف التجربة","This weakens the experience"))+'</strong><b>'+option.earned+' / '+step.max+'</b></div><p>'+esc(T(option.feedback))+'</p><div class="sj-customer-reaction"><span>'+esc(word("رد فعل العميل","Customer reaction"))+'</span><p>“'+esc(T(option.reaction))+'”</p></div><button class="sj-primary" data-action="journey-next">'+esc(run.index===8?word("عرض النتيجة النهائية","View final results"):word("المرحلة التالية","Next stage"))+' ↗</button></div>':'')+
+ '</div><aside class="sj-context"><span class="eyebrow dark">'+esc(word("هدف هذا العميل","CUSTOMER PRIORITY"))+'</span><h3>'+esc(c.device)+'</h3><p>'+esc(T(c.intent))+'</p><div class="sj-context-metric"><strong>'+esc(word("معيار هذه المرحلة","Current competency"))+'</strong><span>'+esc(T(journeyMetrics[step.dimension]))+'</span></div><div class="sj-context-metric"><strong>'+esc(word("النقاط الممكنة","Available points"))+'</strong><span>'+step.max+'</span></div></aside></div></div></main>';
+}
 function courseProgress(course){
  return course.lessons.filter(x=>Number(state.lessonScores[x.id]||0)>=70).length;
 }
