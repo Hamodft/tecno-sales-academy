@@ -63,7 +63,8 @@ function simulationRun(id){
  if(!state.sim||state.sim.scenario.id!==id)state.sim=createSim(id);
  const run=state.sim;
  const count=run.history.length;
- const progress=Math.min(100,Math.round(count/4*100));
+ const total=Object.prototype.hasOwnProperty.call(s.steps,"recover")&&run.history.some(x=>x.step==="recover")?5:4;
+ const progress=Math.min(100,Math.round(count/total*100));
  let panel="";
  if(run.completed){
  const feedback=run.score>=85?L("excellent"):(run.score>=60?L("growing"):L("practice"));
@@ -121,7 +122,7 @@ function render(){
  else if(page==="dashboard")content=portal();
  else if(page==="admin")content=admin();
  else content=missing();
- $("#app").innerHTML='<a href="#content" class="skip">Skip to content</a>'+header()+content+footer();
+ $("#app").innerHTML='<button type="button" id="skipcontent" class="skip">Skip to content</button>'+header()+content+footer();
 }
 async function loadIdentity(){
  if(!configured)return;
@@ -143,6 +144,7 @@ async function finishRun(run){
 }
 document.addEventListener("click",async event=>{
  const el=event.target;
+ if(el.closest("#skipcontent")){const main=$("#content");if(main){main.setAttribute("tabindex","-1");main.focus()}return;}
  if(el.closest("#language")){state.lang=state.lang==="ar"?"en":"ar";try{localStorage.setItem("tsa-language",state.lang)}catch{}render();return;}
  if(el.closest("#mobilemenu")){state.menu=!state.menu;render();return;}
  const lessonBtn=el.closest("[data-lesson]");
