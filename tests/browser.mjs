@@ -1,6 +1,11 @@
 import assert from "node:assert/strict";
 import {spawn} from "node:child_process";
 import {chromium} from "playwright";
+import {scenarioBank} from "../assets/scenario-bank.js";
+const bestIndex=options=>options.reduce((best,o,i)=>{
+ const score=x=>Object.values(x.marks).reduce((sum,v)=>sum+v,0);
+ return score(o)>score(options[best])?i:best;
+},0);
 const origin="http://127.0.0.1:8765/";
 const server=spawn("python3",["-m","http.server","8765","--bind","127.0.0.1"],{stdio:"ignore"});
 let browser;
@@ -43,8 +48,9 @@ try{
  await page.locator('[data-case-group="curve"]').click();
  assert.equal(await page.locator(".scenario-card").count(),10);
  await page.goto(origin+"#/case/camon-01");
- for(let i=0;i<4;i++){
-  await page.locator('[data-choice="0"]').click();
+ const chosenScenario=scenarioBank.find(x=>x.id==="camon-01");
+ for(const phase of ["discovery","technical","evidence","closing"]){
+  await page.locator('[data-choice="'+bestIndex(chosenScenario.stages[phase].choices)+'"]').click();
   await page.locator('[data-action="continue"]').click();
  }
  await page.locator(".report-bignum").waitFor();
@@ -52,13 +58,12 @@ try{
  assert.equal(await page.locator(".score-axis").count(),3);
  assert.ok((await page.locator(".score-axis").allInnerTexts()).every(x=>x.includes("100%")));
  await page.locator('[data-action="retry"]').click();
- await page.locator('[data-choice="1"]').click();
+ const wrong=chosenScenario.stages.discovery.choices.findIndex(x=>x.next==="recovery");
+ await page.locator('[data-choice="'+wrong+'"]').click();
  await page.locator('[data-action="continue"]').click();
  assert.ok((await page.locator(".customer-bubble").innerText()).includes("مو مجرد كلام"));
- await page.locator('[data-choice="0"]').click();
- await page.locator('[data-action="continue"]').click();
- for(let i=0;i<3;i++){
-  await page.locator('[data-choice="0"]').click();
+ for(const phase of ["recovery","technical","evidence","closing"]){
+  await page.locator('[data-choice="'+bestIndex(chosenScenario.stages[phase].choices)+'"]').click();
   await page.locator('[data-action="continue"]').click();
  }
  await page.locator(".report-bignum").waitFor();
